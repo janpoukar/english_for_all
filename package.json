@@ -10,7 +10,7 @@
     "dev": "concurrently \"cd client && npm run dev\" \"cd server && npm run dev\"",
     "build": "cd client && npm run build",
     "start": "cd server && npm start",
-    "setup": "npm install && cd client && npm install && cd ../server && npm install"
+    "setup": "npm install --include=dev && cd client && npm install --include=dev && cd ../server && npm install --include=dev"
   },
   "keywords": ["english", "learning", "education"],
   "author": "",
