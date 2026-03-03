@@ -19,7 +19,7 @@ const frontendBuildPath = path.join(__dirname, '../client/dist');
 app.use(express.static(frontendBuildPath));
 
 // SPA fallback - any request not matching an API route serves index.html
-app.get('*', (req, res) => {
+app.get(/.*/, (req, res) => {
   res.sendFile(path.join(frontendBuildPath, 'index.html'));
 });
 
