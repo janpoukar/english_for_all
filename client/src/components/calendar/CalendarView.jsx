@@ -94,7 +94,7 @@ export default function CalendarView() {
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
       {lessons.map((lesson) => (
-        <Card key={lesson.id} className="bg-gradient-to-br from-blue-50 to-blue-50 hover:from-blue-100 hover:to-blue-50">
+        <Card key={lesson.id} className="bg-gradient-to-br from-blue-50 via-yellow-100 to-blue-50 hover:from-blue-50 hover:via-yellow-200 hover:to-blue-50">
           <div className="flex justify-between items-start mb-3">
             <h3 className="font-bold text-lg text-gray-900 flex-1">{lesson.title}</h3>
             <span className="text-2xl">📚</span>
@@ -104,7 +104,7 @@ export default function CalendarView() {
             <p className="text-sm text-gray-600 mb-4">{lesson.description}</p>
           )}
           
-          <div className="space-y-2 pt-4 border-t border-blue-200">
+          <div className="space-y-2 pt-4 border-t border-yellow-400 opacity-60">
             <div className="flex items-center gap-2 text-gray-700">
               <span className="text-base">📅</span>
               <span className="font-medium">
@@ -125,7 +125,7 @@ export default function CalendarView() {
             </div>
             
             {lesson.status && (
-              <div className="mt-3 pt-3 border-t border-blue-200">
+              <div className="mt-3 pt-3 border-t border-yellow-400 opacity-60">
                 <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
                   lesson.status === 'free' ? 'bg-green-200 text-green-800' :
                   lesson.status === 'booked' ? 'bg-yellow-200 text-yellow-800' :
