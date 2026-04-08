@@ -112,8 +112,8 @@ export default function WavingFlag() {
 
     drawUK(src);
 
-    const SEGS_X = 60,
-      SEGS_Y = 36;
+    const SEGS_X = 120,
+      SEGS_Y = 72;
     const cellW = W / SEGS_X,
       cellH = H / SEGS_Y;
 

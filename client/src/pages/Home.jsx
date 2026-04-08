@@ -92,7 +92,6 @@ export default function Home() {
 
             <div className="animate-slide-in-right hidden md:flex flex-col items-center justify-center">
               <div className="relative mb-12">
-                <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-blue-600 rounded-3xl blur-2xl opacity-30 animate-pulse"></div>
                 <div className="flex justify-center items-start">
                   <WavingFlag />
                 </div>
