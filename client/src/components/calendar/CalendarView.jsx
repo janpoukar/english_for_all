@@ -94,20 +94,22 @@ export default function CalendarView() {
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
       {lessons.map((lesson) => (
-        <Card key={lesson.id} className="bg-gradient-to-br from-blue-50 via-yellow-100 to-blue-50 hover:from-blue-50 hover:via-yellow-200 hover:to-blue-50">
-          <div className="flex justify-between items-start mb-3">
-            <h3 className="font-bold text-lg text-gray-900 flex-1">{lesson.title}</h3>
-            <span className="text-2xl">📚</span>
+        <Card key={lesson.id} className="bg-gradient-to-br from-blue-50 via-yellow-100 to-blue-50 hover:from-blue-50 hover:via-yellow-200 hover:to-blue-50 flex flex-col justify-center items-center text-center py-8">
+          <div className="mb-4">
+            <h3 className="font-bold text-lg text-gray-900">{lesson.title}</h3>
+            {lesson.description && (
+              <p className="text-sm text-gray-600 mt-2">{lesson.description}</p>
+            )}
           </div>
           
-          {lesson.description && (
-            <p className="text-sm text-gray-600 mb-4">{lesson.description}</p>
-          )}
+          <div className="text-5xl font-bold text-gray-900 mb-4 w-full">
+            {lesson.start_time?.substring(0, 5) || 'N/A'} - {lesson.end_time?.substring(0, 5) || 'N/A'}
+          </div>
           
-          <div className="space-y-2 pt-4 border-t border-yellow-400 opacity-60">
-            <div className="flex items-center gap-2 text-gray-700">
+          <div className="space-y-2 w-full border-t border-yellow-400 opacity-60 pt-4">
+            <div className="flex justify-center text-gray-700">
               <span className="text-base">📅</span>
-              <span className="font-medium">
+              <span className="font-medium ml-2">
                 {new Date(lesson.date).toLocaleDateString('cs-CZ', { 
                   weekday: 'long', 
                   year: 'numeric', 
@@ -117,15 +119,8 @@ export default function CalendarView() {
               </span>
             </div>
             
-            <div className="flex items-center gap-2 text-gray-700">
-              <span className="text-base">⏰</span>
-              <span className="font-medium">
-                {lesson.start_time?.substring(0, 5) || 'N/A'} - {lesson.end_time?.substring(0, 5) || 'N/A'}
-              </span>
-            </div>
-            
             {lesson.status && (
-              <div className="mt-3 pt-3 border-t border-yellow-400 opacity-60">
+              <div className="mt-4">
                 <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
                   lesson.status === 'free' ? 'bg-green-200 text-green-800' :
                   lesson.status === 'booked' ? 'bg-yellow-200 text-yellow-800' :
