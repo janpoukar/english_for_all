@@ -228,7 +228,6 @@ export default function WavingFlag() {
           ref={canvasRef}
           width={480}
           height={240}
-          className="rounded"
           style={{ display: 'block', marginTop: '12px', backgroundColor: 'transparent' }}
         />
       </div>
