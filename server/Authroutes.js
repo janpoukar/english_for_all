@@ -5,19 +5,39 @@ const pool = require('./db');
 
 const router = express.Router();
 
+const sanitizeUser = (user) => ({
+  id: user.id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+});
+
+const signToken = (user) =>
+  jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
 router.post('/register', async (req, res) => {
   const { name, email, password, role } = req.body;
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-
   try {
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Vyplň prosím jméno, email a heslo' });
+    }
+
+    const normalizedRole = role === 'tutor' ? 'tutor' : 'student';
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const result = await pool.query(
       'INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,$4) RETURNING *',
-      [name, email, hashedPassword, role]
+      [name.trim(), email.trim().toLowerCase(), hashedPassword, normalizedRole]
     );
 
-    res.json(result.rows[0]);
+    const user = result.rows[0];
+    res.status(201).json({
+      token: signToken(user),
+      user: sanitizeUser(user),
+    });
   } catch (err) {
+    console.error('Register error:', err);
     res.status(400).json({ error: 'Uživatel již existuje' });
   }
 });
@@ -25,9 +45,13 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Vyplň prosím email a heslo' });
+  }
+
   const result = await pool.query(
     'SELECT * FROM users WHERE email=$1',
-    [email]
+    [email.trim().toLowerCase()]
   );
 
   if (result.rows.length === 0) {
@@ -42,13 +66,10 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ error: 'Špatné heslo' });
   }
 
-  const token = jwt.sign(
-    { id: user.id, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: '7d' }
-  );
-
-  res.json({ token });
+  res.json({
+    token: signToken(user),
+    user: sanitizeUser(user),
+  });
 });
 
 module.exports = router;

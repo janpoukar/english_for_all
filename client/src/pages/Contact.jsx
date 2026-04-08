@@ -71,21 +71,9 @@ export default function Contact() {
                   </div>
                 </div>
 
-                <div className="flex gap-4">
-                  <div className="text-4xl">🌐</div>
-                  <div>
-                    <h3 className="font-bold text-xl text-gray-800 mb-2">Sociální sítě</h3>
-                    <div className="flex gap-4">
-                      <a href="#" className="text-blue-600 hover:text-blue-800 font-bold">Facebook</a>
-                      <a href="#" className="text-blue-600 hover:text-blue-800 font-bold">Instagram</a>
-                      <a href="#" className="text-blue-600 hover:text-blue-800 font-bold">LinkedIn</a>
-                    </div>
-                  </div>
-                </div>
               </div>
 
-              <div className="mt-12 bg-blue-50 p-8 rounded-2xl border-l-4 border-blue-900">
-                <h3 className="font-bold text-lg text-gray-800 mb-2">Rychlý tip</h3>
+              <div className="mt-12 bg-blue-50 p-8 rounded-2xl border-l-4 border-blue-900 shadow-sm">
                 <p className="text-gray-600">Nejrychlejší odpověď získáte prostřednictvím e-mailu nebo kontaktního formuláře níže.</p>
               </div>
             </div>

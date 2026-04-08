@@ -1,7 +1,47 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+
+const NEWSLETTER_SETTINGS_KEY = "newsletterSettings";
+const NEWSLETTER_SUBSCRIBERS_KEY = "newsletterSubscribers";
+
+const defaultNewsletterSettings = {
+  title: "Přihlaste se k Newsletteru",
+  subtitle: "Dostávejte aktuální tipy na učení angličtiny a nové kurzy",
+  buttonText: "Přihlásit",
+};
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [newsletterSettings, setNewsletterSettings] = useState(defaultNewsletterSettings);
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+
+  useEffect(() => {
+    const stored = localStorage.getItem(NEWSLETTER_SETTINGS_KEY);
+    if (!stored) return;
+
+    try {
+      const parsed = JSON.parse(stored);
+      setNewsletterSettings({ ...defaultNewsletterSettings, ...parsed });
+    } catch {
+      setNewsletterSettings(defaultNewsletterSettings);
+    }
+  }, []);
+
+  const handleNewsletterSubmit = (event) => {
+    event.preventDefault();
+    const email = newsletterEmail.trim().toLowerCase();
+    if (!email) return;
+
+    const stored = localStorage.getItem(NEWSLETTER_SUBSCRIBERS_KEY);
+    const current = stored ? JSON.parse(stored) : [];
+    if (!current.includes(email)) {
+      current.push(email);
+      localStorage.setItem(NEWSLETTER_SUBSCRIBERS_KEY, JSON.stringify(current));
+    }
+
+    setNewsletterEmail("");
+    alert("Děkujeme za přihlášení k newsletteru.");
+  };
 
   return (
     <footer className="bg-gradient-to-b from-blue-950 via-gray-900 to-black text-white">
@@ -22,17 +62,6 @@ export default function Footer() {
               <p className="text-gray-300 mb-6 leading-relaxed text-sm">
                 Profesionální výuka angličtiny pro všechny úrovně. Věříme, že každý se může naučit anglicky!
               </p>
-              <div className="flex gap-3">
-                <a href="#" className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-700 flex items-center justify-center transition-all hover-lift shadow-md text-lg font-bold hover:shadow-glow duration-300">
-                  f
-                </a>
-                <a href="#" className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-700 flex items-center justify-center transition-all hover-lift shadow-md text-lg hover:shadow-glow duration-300">
-                  📷
-                </a>
-                <a href="#" className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-800 flex items-center justify-center transition-all hover-lift shadow-md text-sm font-bold hover:shadow-glow duration-300">
-                  in
-                </a>
-              </div>
             </div>
 
             {/* Quick Links */}
@@ -121,20 +150,23 @@ export default function Footer() {
           <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-red-700 rounded-2xl p-8 md:p-12 mb-12 animate-fade-in-up shadow-hard hover-lift transform transition-all border border-blue-700/50">
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div>
-                <h3 className="text-2xl md:text-3xl font-bold mb-3 text-white">Přihlaste se k Newsletteru</h3>
-                <p className="text-blue-100 text-sm md:text-base">Dostávajte aktuální tipy na učení angličtiny a nové kurzy</p>
+                <h3 className="text-2xl md:text-3xl font-bold mb-3 text-white">{newsletterSettings.title}</h3>
+                <p className="text-blue-100 text-sm md:text-base">{newsletterSettings.subtitle}</p>
               </div>
-              <form className="flex gap-2 flex-col md:flex-row">
+              <form onSubmit={handleNewsletterSubmit} className="flex gap-2 flex-col md:flex-row">
                 <input
                   type="email"
                   placeholder="Váš email"
+                  value={newsletterEmail}
+                  onChange={(event) => setNewsletterEmail(event.target.value)}
                   className="flex-1 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 form-input bg-white font-medium text-sm"
+                  required
                 />
                 <button
                   type="submit"
                   className="px-6 md:px-8 py-3 bg-white text-blue-900 font-bold rounded-lg hover:shadow-lg hover:-translate-y-1 transition-all hover-shine text-sm md:text-base"
                 >
-                  Přihlásit
+                  {newsletterSettings.buttonText}
                 </button>
               </form>
             </div>
@@ -155,7 +187,12 @@ export default function Footer() {
                 </a>
               </div>
               <div className="text-right">
-                <p>Vytvořeno pro milovníky jazyků s ❤️</p>
+                <Link
+                  to="/admin-login"
+                  className="hover:text-white transition font-medium hover:text-blue-400 duration-300"
+                >
+                  Správa stránky
+                </Link>
               </div>
             </div>
           </div>

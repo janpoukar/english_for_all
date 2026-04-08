@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/layout/Navbar";
 import Footer from "./components/layout/Footer";
 import Home from "./pages/Home";
@@ -8,6 +8,8 @@ import Contact from "./pages/Contact";
 import Gallery from "./pages/Gallery";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
 import TutorDashboard from "./pages/TutorDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 
@@ -25,6 +27,9 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Navigate to="/login" replace />} />
+            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/tutor-dashboard" element={<TutorDashboard />} />
             <Route path="/student-dashboard" element={<StudentDashboard />} />
           </Routes>

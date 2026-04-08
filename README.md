@@ -71,6 +71,10 @@ npm run setup     # První instalace všech závisleností
 
 **Úplný průvodce**: [RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md)
 
+## 🌐 Nahrání na Render (Produkce)
+
+**Úplný průvodce**: [RENDER_DEPLOYMENT.md](./RENDER_DEPLOYMENT.md)
+
 ### TL;DR:
 1. Push na GitHub
 2. Připoj repo na https://railway.app/

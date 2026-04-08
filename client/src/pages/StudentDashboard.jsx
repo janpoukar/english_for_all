@@ -46,6 +46,7 @@ export default function StudentDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
     navigate("/");
   };
 

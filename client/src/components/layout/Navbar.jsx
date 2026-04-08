@@ -1,17 +1,20 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const userData = localStorage.getItem("user");
     if (userData) {
       setUser(JSON.parse(userData));
+      return;
     }
-  }, []);
+    setUser(null);
+  }, [location.pathname]);
 
   const navLinks = [
     { path: "/", label: "Domů" },
@@ -24,6 +27,7 @@ export default function Navbar() {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
     setUser(null);
     navigate("/");
     setIsOpen(false);
@@ -64,13 +68,19 @@ export default function Navbar() {
           {user ? (
             <div className="flex items-center gap-3 ml-4 pl-4 border-l border-gray-300">
               <span className="text-sm font-medium text-gray-700">
-                {user.role === "tutor" ? "👨‍🏫" : "👨‍🎓"} {user.name}
+                {user.role === "admin" ? "🛠️" : user.role === "tutor" ? "👨‍🏫" : "👨‍🎓"} {user.name}
               </span>
               <Link 
-                to={user.role === "tutor" ? "/tutor-dashboard" : "/student-dashboard"}
+                to={
+                  user.role === "admin"
+                    ? "/admin-dashboard"
+                    : user.role === "tutor"
+                      ? "/tutor-dashboard"
+                      : "/student-dashboard"
+                }
                 className="btn-primary text-sm font-semibold px-4 py-2"
               >
-                Moje lekce
+                {user.role === "admin" ? "Správa" : "Moje lekce"}
               </Link>
               <button 
                 onClick={handleLogout}
@@ -120,14 +130,20 @@ export default function Navbar() {
               {user ? (
                 <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
                   <p className="text-sm font-medium text-gray-600 px-4">
-                    {user.role === "tutor" ? "👨‍🏫 Lektor" : "👨‍🎓 Student"}: <strong>{user.name}</strong>
+                    {user.role === "admin" ? "🛠️ Správce" : user.role === "tutor" ? "👨‍🏫 Lektor" : "👨‍🎓 Student"}: <strong>{user.name}</strong>
                   </p>
                   <Link 
-                    to={user.role === "tutor" ? "/tutor-dashboard" : "/student-dashboard"}
+                    to={
+                      user.role === "admin"
+                        ? "/admin-dashboard"
+                        : user.role === "tutor"
+                          ? "/tutor-dashboard"
+                          : "/student-dashboard"
+                    }
                     onClick={() => setIsOpen(false)}
                     className="w-full btn-primary text-center mt-2 font-semibold"
                   >
-                    Moje lekce
+                    {user.role === "admin" ? "Správa" : "Moje lekce"}
                   </Link>
                   <button 
                     onClick={handleLogout}
