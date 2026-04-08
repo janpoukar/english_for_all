@@ -4,192 +4,211 @@ export default function WavingFlag() {
   const canvasRef = useRef(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const cv = canvasRef.current;
+    if (!cv) return;
 
-    const ctx = canvas.getContext('2d');
     const W = 480, H = 240;
+    const gl = cv.getContext('webgl');
 
-    const src = document.createElement('canvas');
-    src.width = W;
-    src.height = H;
+    const vsrc = `
+      attribute vec2 a_pos;
+      attribute vec2 a_uv;
+      varying vec2 v_uv;
+      void main(){
+        gl_Position = vec4(a_pos, 0, 1);
+        v_uv = a_uv;
+      }`;
 
-    function drawUK(c) {
-      const w = c.width, h = c.height;
-      const cx = c.getContext('2d');
+    const fsrc = `
+      precision mediump float;
+      varying vec2 v_uv;
+      uniform sampler2D u_tex;
+      void main(){
+        gl_FragColor = texture2D(u_tex, v_uv);
+      }`;
 
-      cx.fillStyle = '#012169';
-      cx.fillRect(0, 0, w, h);
-
-      cx.save();
-      cx.strokeStyle = '#FFFFFF';
-      cx.lineWidth = h * 0.2;
-      cx.beginPath();
-      cx.moveTo(0, 0);
-      cx.lineTo(w, h);
-      cx.stroke();
-      cx.beginPath();
-      cx.moveTo(w, 0);
-      cx.lineTo(0, h);
-      cx.stroke();
-      cx.restore();
-
-      const redW = h * 0.133;
-
-      cx.save();
-      cx.strokeStyle = '#C8102E';
-      cx.lineWidth = redW;
-
-      cx.save();
-      cx.beginPath();
-      cx.rect(0, 0, w / 2, h / 2);
-      cx.clip();
-      cx.beginPath();
-      cx.moveTo(0, 0);
-      cx.lineTo(w, h);
-      cx.stroke();
-      cx.restore();
-
-      cx.save();
-      cx.beginPath();
-      cx.rect(w / 2, h / 2, w / 2, h / 2);
-      cx.clip();
-      cx.beginPath();
-      cx.moveTo(0, 0);
-      cx.lineTo(w, h);
-      cx.stroke();
-      cx.restore();
-
-      cx.save();
-      cx.beginPath();
-      cx.rect(w / 2, 0, w / 2, h / 2);
-      cx.clip();
-      cx.beginPath();
-      cx.moveTo(w, 0);
-      cx.lineTo(0, h);
-      cx.stroke();
-      cx.restore();
-
-      cx.save();
-      cx.beginPath();
-      cx.rect(0, h / 2, w / 2, h / 2);
-      cx.clip();
-      cx.beginPath();
-      cx.moveTo(w, 0);
-      cx.lineTo(0, h);
-      cx.stroke();
-      cx.restore();
-
-      cx.restore();
-
-      cx.save();
-      cx.strokeStyle = '#FFFFFF';
-      cx.lineWidth = h * 0.333;
-      cx.beginPath();
-      cx.moveTo(w / 2, 0);
-      cx.lineTo(w / 2, h);
-      cx.stroke();
-      cx.beginPath();
-      cx.moveTo(0, h / 2);
-      cx.lineTo(w, h / 2);
-      cx.stroke();
-      cx.restore();
-
-      cx.save();
-      cx.strokeStyle = '#C8102E';
-      cx.lineWidth = h * 0.2;
-      cx.beginPath();
-      cx.moveTo(w / 2, 0);
-      cx.lineTo(w / 2, h);
-      cx.stroke();
-      cx.beginPath();
-      cx.moveTo(0, h / 2);
-      cx.lineTo(w, h / 2);
-      cx.stroke();
-      cx.restore();
+    function createShader(type, src) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      return s;
     }
 
-    drawUK(src);
+    const prog = gl.createProgram();
+    gl.attachShader(prog, createShader(gl.VERTEX_SHADER, vsrc));
+    gl.attachShader(prog, createShader(gl.FRAGMENT_SHADER, fsrc));
+    gl.linkProgram(prog);
+    gl.useProgram(prog);
 
-    const SEGS_X = 60, SEGS_Y = 36;
-    const cellW = W / SEGS_X, cellH = H / SEGS_Y;
+    const aPos = gl.getAttribLocation(prog, 'a_pos');
+    const aUV = gl.getAttribLocation(prog, 'a_uv');
+    const uTex = gl.getUniformLocation(prog, 'u_tex');
 
-    function wave(nx, ny, t) {
-      const amp = 14 * nx;
-      const secondary = 3.5 * nx * Math.sin(ny * Math.PI * 1.7 + t * 1.3);
-      return Math.sin(nx * 2.2 * Math.PI + t * 2.6) * amp + secondary;
+    const NX = 120, NY = 72;
+    const verts = new Float32Array(NX * NY * 2);
+    const uvs = new Float32Array(NX * NY * 2);
+    const indices = [];
+
+    for (let j = 0; j < NY; j++) {
+      for (let i = 0; i < NX; i++) {
+        const idx = (j * NX + i) * 2;
+        uvs[idx + 0] = i / (NX - 1);
+        uvs[idx + 1] = j / (NY - 1);
+      }
     }
 
-    function waveX(nx, ny, t) {
-      return nx * W + Math.sin(nx * 2.8 + t * 2.0) * nx * 5;
+    for (let j = 0; j < NY - 1; j++) {
+      for (let i = 0; i < NX - 1; i++) {
+        const a = j * NX + i, b = a + 1, c = a + NX, d = c + 1;
+        indices.push(a, b, c, b, d, c);
+      }
     }
 
+    const posBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, verts, gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(aPos);
+    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+    const uvBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, uvBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, uvs, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(aUV);
+    gl.vertexAttribPointer(aUV, 2, gl.FLOAT, false, 0, 0);
+
+    const idxBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, idxBuf);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+    /* Kreslení vlajky na canvas texturu */
+    const flagCanvas = document.createElement('canvas');
+    flagCanvas.width = 512;
+    flagCanvas.height = 256;
+    const fc = flagCanvas.getContext('2d');
+    const fw = 512, fh = 256;
+
+    fc.fillStyle = '#012169';
+    fc.fillRect(0, 0, fw, fh);
+
+    fc.save();
+    fc.strokeStyle = '#FFFFFF';
+    fc.lineWidth = fh * 0.2;
+    fc.beginPath();
+    fc.moveTo(0, 0);
+    fc.lineTo(fw, fh);
+    fc.stroke();
+    fc.beginPath();
+    fc.moveTo(fw, 0);
+    fc.lineTo(0, fh);
+    fc.stroke();
+    fc.restore();
+
+    fc.save();
+    fc.strokeStyle = '#C8102E';
+    fc.lineWidth = fh * 0.133;
+    [
+      [0, 0, fw / 2, fh / 2, 0, 0],
+      [fw / 2, fh / 2, fw, fh, fw / 2, fh / 2],
+      [fw / 2, 0, fw, fh / 2, fw / 2, 0],
+      [0, fh / 2, fw / 2, fh, 0, fh / 2]
+    ].forEach(([x1, y1, x2, y2, cx, cy]) => {
+      fc.save();
+      fc.beginPath();
+      fc.rect(cx, cy, fw / 2, fh / 2);
+      fc.clip();
+      const d = (x1 === 0 && y1 === 0) || (x1 === fw / 2 && y1 === fh / 2) ? 0 : 1;
+      const dirs = [
+        [0, 0, fw, fh],
+        [fw, 0, 0, fh]
+      ];
+      fc.beginPath();
+      fc.moveTo(dirs[d][0], dirs[d][1]);
+      fc.lineTo(dirs[d][2], dirs[d][3]);
+      fc.stroke();
+      fc.restore();
+    });
+    fc.restore();
+
+    fc.save();
+    fc.strokeStyle = '#FFFFFF';
+    fc.lineWidth = fh * 0.333;
+    fc.beginPath();
+    fc.moveTo(fw / 2, 0);
+    fc.lineTo(fw / 2, fh);
+    fc.stroke();
+    fc.beginPath();
+    fc.moveTo(0, fh / 2);
+    fc.lineTo(fw, fh / 2);
+    fc.stroke();
+    fc.restore();
+
+    fc.save();
+    fc.strokeStyle = '#C8102E';
+    fc.lineWidth = fh * 0.2;
+    fc.beginPath();
+    fc.moveTo(fw / 2, 0);
+    fc.lineTo(fw / 2, fh);
+    fc.stroke();
+    fc.beginPath();
+    fc.moveTo(0, fh / 2);
+    fc.lineTo(fw, fh / 2);
+    fc.stroke();
+    fc.restore();
+
+    /* Textura do WebGL */
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, flagCanvas);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    gl.uniform1i(uTex, 0);
+    gl.viewport(0, 0, W, H);
+    gl.clearColor(0, 0, 0, 0);
+
+    /* Animační smyčka */
     let t = 0;
     let animationId;
 
-    function render() {
-      ctx.clearRect(0, 0, W, H);
+    function frame() {
+      t += 0.009;
 
-      for (let row = 0; row < SEGS_Y; row++) {
-        for (let col = 0; col < SEGS_X; col++) {
-          const nx0 = col / SEGS_X, ny0 = row / SEGS_Y;
-          const nx1 = (col + 1) / SEGS_X, ny1 = (row + 1) / SEGS_Y;
+      for (let j = 0; j < NY; j++) {
+        for (let i = 0; i < NX; i++) {
+          const nx = i / (NX - 1);
+          const ny = j / (NY - 1);
+          const ease = nx * nx;
 
-          const tl = { x: waveX(nx0, ny0, t), y: ny0 * H + wave(nx0, ny0, t) };
-          const tr = { x: waveX(nx1, ny0, t), y: ny0 * H + wave(nx1, ny0, t) };
-          const br = { x: waveX(nx1, ny1, t), y: ny1 * H + wave(nx1, ny1, t) };
-          const bl = { x: waveX(nx0, ny1, t), y: ny1 * H + wave(nx0, ny1, t) };
+          const dy =
+            Math.sin(nx * 2.0 * Math.PI + t * 2.4) * 14 * ease +
+            Math.sin(nx * 3.8 * Math.PI + t * 1.7 + ny * 1.4) * 4.5 * ease +
+            Math.sin(nx * 1.1 * Math.PI + t * 1.1 + ny * 2.6) * 2.0 * ease;
+          const dx = Math.sin(nx * 2.5 + t * 1.8) * nx * 3.5;
 
-          ctx.save();
-          ctx.beginPath();
-          ctx.moveTo(tl.x, tl.y);
-          ctx.lineTo(tr.x, tr.y);
-          ctx.lineTo(br.x, br.y);
-          ctx.lineTo(bl.x, bl.y);
-          ctx.closePath();
-          ctx.clip();
+          const px = (nx + dx / W) * 2 - 1;
+          const py = 1 - (ny + dy / H) * 2;
 
-          const srcX = col * cellW, srcY = row * cellH;
-          const minY = Math.min(tl.y, tr.y, bl.y, br.y) - 2;
-          const maxY = Math.max(tl.y, tr.y, bl.y, br.y) + 2;
-          const minX = Math.min(tl.x, bl.x) - 1;
-
-          ctx.drawImage(
-            src,
-            srcX,
-            srcY,
-            cellW + 1,
-            cellH + 1,
-            minX,
-            minY,
-            cellW + 3,
-            maxY - minY + 4
-          );
-          ctx.restore();
+          const idx = (j * NX + i) * 2;
+          verts[idx + 0] = px;
+          verts[idx + 1] = py;
         }
       }
 
-      addShading();
-      t += 0.022;
-      animationId = requestAnimationFrame(render);
+      gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, verts);
+      gl.bindBuffer(gl.ARRAY_BUFFER, uvBuf);
+      gl.vertexAttribPointer(aUV, 2, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
+      gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+      animationId = requestAnimationFrame(frame);
     }
 
-    function addShading() {
-      for (let col = 0; col <= SEGS_X; col++) {
-        const nx = col / SEGS_X;
-        const wv = Math.sin(nx * 2.2 * Math.PI + t * 2.6);
-        const alpha = wv * 0.09 * nx;
-        if (Math.abs(alpha) < 0.001) continue;
-        const x = waveX(nx, 0.5, t);
-        ctx.fillStyle =
-          alpha > 0
-            ? `rgba(0,0,0,${alpha})`
-            : `rgba(255,255,255,${-alpha * 0.5})`;
-        ctx.fillRect(x - 1, 0, W / SEGS_X + 2, H);
-      }
-    }
-
-    render();
+    frame();
 
     return () => {
       if (animationId) {
@@ -210,7 +229,7 @@ export default function WavingFlag() {
           width={480}
           height={240}
           className="rounded"
-          style={{ display: 'block', marginTop: '12px' }}
+          style={{ display: 'block', marginTop: '12px', backgroundColor: '#f0f0f0' }}
         />
       </div>
     </div>
