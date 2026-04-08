@@ -229,7 +229,7 @@ export default function WavingFlag() {
           width={480}
           height={240}
           className="rounded"
-          style={{ display: 'block', marginTop: '12px', backgroundColor: '#f0f0f0' }}
+          style={{ display: 'block', marginTop: '12px', backgroundColor: 'transparent' }}
         />
       </div>
     </div>
