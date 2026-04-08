@@ -7,7 +7,7 @@ export default function WavingFlag() {
     const cv = canvasRef.current;
     if (!cv) return;
 
-    const W = 480, H = 240;
+    const W = 640, H = 360;
     const gl = cv.getContext('webgl');
 
     const vsrc = `
@@ -82,8 +82,8 @@ export default function WavingFlag() {
 
     /* Kreslení vlajky na canvas texturu */
     const flagCanvas = document.createElement('canvas');
-    flagCanvas.width = 512;
-    flagCanvas.height = 256;
+    flagCanvas.width = 640;
+    flagCanvas.height = 360;
     const fc = flagCanvas.getContext('2d');
     const fw = 512, fh = 256;
 
@@ -182,10 +182,10 @@ export default function WavingFlag() {
           const ease = nx * nx;
 
           const dy =
-            Math.sin(nx * 2.0 * Math.PI + t * 2.4) * 14 * ease +
-            Math.sin(nx * 3.8 * Math.PI + t * 1.7 + ny * 1.4) * 4.5 * ease +
-            Math.sin(nx * 1.1 * Math.PI + t * 1.1 + ny * 2.6) * 2.0 * ease;
-          const dx = Math.sin(nx * 2.5 + t * 1.8) * nx * 3.5;
+            Math.sin(nx * 2.0 * Math.PI + t * 2.4) * 18 * ease +
+            Math.sin(nx * 3.8 * Math.PI + t * 1.7 + ny * 1.4) * 6 * ease +
+            Math.sin(nx * 1.1 * Math.PI + t * 1.1 + ny * 2.6) * 2.5 * ease;
+          const dx = Math.sin(nx * 2.5 + t * 1.8) * nx * 4.5;
 
           const px = (nx + dx / W) * 2 - 1;
           const py = 1 - (ny + dy / H) * 2;
@@ -226,8 +226,8 @@ export default function WavingFlag() {
       <div>
         <canvas
           ref={canvasRef}
-          width={480}
-          height={240}
+          width={640}
+          height={360}
           style={{ display: 'block', marginTop: '12px', backgroundColor: 'transparent' }}
         />
       </div>
