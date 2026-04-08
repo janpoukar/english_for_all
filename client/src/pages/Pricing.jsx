@@ -1,30 +1,50 @@
 import { Link } from "react-router-dom";
 
 export default function Pricing() {
-  const pricingPlan = {
-    name: "Cena",
-    price: "400",
-    period: "hodina",
-    description: "400 Kč za hodinu. Individuální čas je možné domluvit podle vašich možností.",
-    icon: "📘",
-    color: "from-blue-50 via-white to-red-50",
-    borderColor: "border-blue-200",
-    features: [
-      "Cena za 60 minut výuky",
-      "Individuální i skupinová lekce",
-      "Výuka podle vašich potřeb",
-    ],
-  };
+  const pricingPlans = [
+    {
+      name: "Individuální lekce",
+      price: "400",
+      period: "hodina",
+      description: "Přesně pro tebe. Bez rozptylování v přítomnosti ostatních.",
+      icon: "👤",
+      color: "from-blue-50 via-white to-blue-50",
+      borderColor: "border-blue-200",
+      features: [
+        "Cena za 60 minut výuky",
+        "Individuální přístup",
+        "Čas dle vašeho harmonogramu",
+      ],
+    },
+    {
+      name: "Skupinová lekce",
+      price: "500",
+      period: "hodina",
+      description: "Pro skupinu až do 3 lidí. Zábavnější edukace se spolužáky.",
+      icon: "👥",
+      color: "from-red-50 via-white to-red-50",
+      borderColor: "border-red-200",
+      features: [
+        "Cena za 60 minut výuky",
+        "Skupinový kurz (až 3 lidé)",
+        "Časový slot dle skupiny",
+      ],
+    }
+  ];
 
   const faqs = [
     {
-      q: "Kolik stojí jedna lekce?",
-      a: "Jedna lekce stojí 400 Kč za hodinu.",
+      q: "Jaká je cena individuální lekce?",
+      a: "Individuální lekce stojí 400 Kč za hodinu.",
     },
-      {
-        q: "Lze si domluvit individuální čas lekce?",
-        a: "Ano, čas lekce je možné domluvit individuálně podle vašich možností.",
-      },
+    {
+      q: "Jaká je cena skupinové lekce?",
+      a: "Skupinová lekce (až 3 lidé) stojí 500 Kč za hodinu.",
+    },
+    {
+      q: "Lze si domluvit čas lekce?",
+      a: "Ano, čas lekce je možné domluvit individuálně podle vašich možností.",
+    },
     {
       q: "Co všechno cena zahrnuje?",
       a: "Individuální přístup, přípravu na lekci a výuku podle vašich cílů.",
@@ -32,10 +52,6 @@ export default function Pricing() {
     {
       q: "Mohu si naplánovat lekce dle svého harmonogramu?",
       a: "Ano, časy lekcí domlouváme podle toho, co vám vyhovuje.",
-    },
-    {
-      q: "Co když si budu potřebovat více lekcí?",
-      a: "Stačí se domluvit na dalším termínu, cena zůstává 400 Kč za hodinu.",
     },
   ];
 
@@ -48,48 +64,50 @@ export default function Pricing() {
         </div>
 
         <div className="max-w-6xl mx-auto px-4 md:px-8 relative z-10 text-center">
-          <h1 className="text-4xl md:text-5xl font-black mb-6">Jednotný ceník</h1>
+          <h1 className="text-4xl md:text-5xl font-black mb-6">Rozdílné ceny pro různé potřeby</h1>
           <p className="text-lg md:text-xl text-gray-200 max-w-2xl mx-auto mb-8 font-medium">
-            Jeden jasný tarif pro všechny. Platíte pouze za čas, který skutečně využijete.
+            Jasné a přehledné ceny. Platíte pouze za čas, který skutečně využijete.
           </p>
         </div>
       </section>
 
       <section className="py-16 md:py-24 px-4 md:px-8 bg-gradient-to-b from-white to-blue-50 relative">
         <div className="max-w-6xl mx-auto">
-          <div className="max-w-2xl mx-auto">
-            <div className="relative rounded-[28px] overflow-hidden transition-all duration-500 border border-blue-100 shadow-[0_24px_80px_rgba(0,71,171,0.12)]">
-              <div className={`absolute inset-0 bg-gradient-to-br ${pricingPlan.color}`}></div>
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-700 via-red-600 to-orange-500"></div>
-              <div className={`absolute inset-0 border-2 ${pricingPlan.borderColor} rounded-[28px] pointer-events-none`}></div>
+          <div className="grid md:grid-cols-2 gap-8">
+            {pricingPlans.map((plan, idx) => (
+              <div key={idx} className="relative rounded-[28px] overflow-hidden transition-all duration-500 border shadow-[0_24px_80px_rgba(0,71,171,0.12)]">
+                <div className={`absolute inset-0 bg-gradient-to-br ${plan.color}`}></div>
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-700 via-red-600 to-orange-500"></div>
+                <div className={`absolute inset-0 border-2 ${plan.borderColor} rounded-[28px] pointer-events-none`}></div>
 
-              <div className="relative p-8 md:p-10 h-full flex flex-col text-center">
-                <div className="text-5xl mb-4">{pricingPlan.icon}</div>
-                <h3 className="text-2xl md:text-3xl font-black text-gray-900 mb-2">{pricingPlan.name}</h3>
-                <p className="text-gray-600 text-sm md:text-base mb-8 max-w-xl mx-auto">{pricingPlan.description}</p>
+                <div className="relative p-8 md:p-10 h-full flex flex-col text-center">
+                  <div className="text-5xl mb-4">{plan.icon}</div>
+                  <h3 className="text-2xl md:text-3xl font-black text-gray-900 mb-2">{plan.name}</h3>
+                  <p className="text-gray-600 text-sm md:text-base mb-8 max-w-xl mx-auto">{plan.description}</p>
 
-                <div className="mb-8">
-                  <span className="text-5xl md:text-6xl font-black text-gray-900">{pricingPlan.price} Kč</span>
-                  <span className="text-gray-600 ml-2 text-lg">/ {pricingPlan.period}</span>
+                  <div className="mb-8">
+                    <span className="text-5xl md:text-6xl font-black text-gray-900">{plan.price} Kč</span>
+                    <span className="text-gray-600 ml-2 text-lg">/ {plan.period}</span>
+                  </div>
+
+                  <Link
+                    to="/contact"
+                    className="inline-flex items-center justify-center w-full md:w-auto md:min-w-64 mx-auto py-3 px-8 rounded-xl font-bold text-center mb-8 transition-all hover:shadow-lg bg-gradient-to-r from-blue-900 to-red-700 text-white hover:scale-[1.02]"
+                  >
+                    Rezervovat lekci
+                  </Link>
+
+                  <ul className="space-y-3 text-left max-w-md mx-auto">
+                    {plan.features.map((feature, fidx) => (
+                      <li key={fidx} className="flex items-start gap-3 text-gray-800">
+                        <span className="text-green-600 font-bold text-lg mt-0.5">✓</span>
+                        <span className="text-sm md:text-base">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-
-                <Link
-                  to="/contact"
-                  className="inline-flex items-center justify-center w-full md:w-auto md:min-w-72 mx-auto py-3 px-8 rounded-xl font-bold text-center mb-8 transition-all hover:shadow-lg bg-gradient-to-r from-blue-900 to-red-700 text-white hover:scale-[1.02]"
-                >
-                  Rezervovat lekci
-                </Link>
-
-                <ul className="space-y-3 text-left max-w-md mx-auto">
-                  {pricingPlan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-3 text-gray-800">
-                      <span className="text-green-600 font-bold text-lg mt-0.5">✓</span>
-                      <span className="text-sm md:text-base">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -125,7 +143,7 @@ export default function Pricing() {
               Připraveni začít svou cestu k angličtině?
             </h2>
             <p className="text-xl text-gray-100 mb-12 max-w-2xl mx-auto">
-              Zarezervujte si konzultaci a domluvte si první lekci za 400 Kč za hodinu. Individuální čas je možné domluvit.
+              Zarezervujte si konzultaci a domluvte si první lekci. Individuální lekce 400 Kč, skupinová lekce 500 Kč za hodinu.
             </p>
             <div className="flex flex-col md:flex-row gap-4 justify-center">
               <Link
