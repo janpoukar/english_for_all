@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import ServiceCard from "../components/ui/ServiceCard";
+import WavingFlag from "../components/WavingFlag";
 
 export default function Home() {
   const services = [
@@ -92,8 +93,8 @@ export default function Home() {
             <div className="animate-slide-in-right hidden md:flex flex-col items-center justify-center">
               <div className="relative mb-12">
                 <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-blue-600 rounded-3xl blur-2xl opacity-30 animate-pulse"></div>
-                <div className="text-8xl md:text-9xl text-center animate-float relative">
-                  🇬🇧
+                <div className="flex justify-center items-start">
+                  <WavingFlag />
                 </div>
               </div>
               <div className="w-full space-y-4">
