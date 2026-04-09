@@ -109,22 +109,43 @@ router.post('/admin/change-password', verifyAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Heslo musí mít alespoň 6 znaků' });
     }
 
-    // Zkontroluj, že uživatel existuje (s proper UUID casting)
-    const userExists = await pool.query(
-      'SELECT id FROM users WHERE id = $1::uuid',
-      [userId]
-    );
-    
-    if (userExists.rows.length === 0) {
+    // Retry logic pro pomalé DB připojení
+    let userExists = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const result = await pool.query(
+          'SELECT id FROM users WHERE id = $1::uuid',
+          [userId]
+        );
+        userExists = result.rows.length > 0;
+        break;
+      } catch (err) {
+        console.error(`Attempt ${attempt} to check user failed:`, err.message);
+        if (attempt === 3) throw err;
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
+
+    if (!userExists) {
       return res.status(404).json({ error: 'Uživatel nebyl nalezen' });
     }
 
-    // Hashuj nové heslo a ulož
+    // Hashuj nové heslo a ulož (s retry)
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await pool.query(
-      'UPDATE users SET password_hash=$1 WHERE id=$2::uuid',
-      [hashedPassword, userId]
-    );
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await pool.query(
+          'UPDATE users SET password_hash=$1 WHERE id=$2::uuid',
+          [hashedPassword, userId]
+        );
+        break;
+      } catch (err) {
+        console.error(`Attempt ${attempt} to update password failed:`, err.message);
+        if (attempt === 3) throw err;
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
 
     res.json({ success: true, message: 'Heslo bylo změněno' });
   } catch (err) {

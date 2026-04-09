@@ -17,6 +17,15 @@ if (useSsl) {
   poolConfig.ssl = { rejectUnauthorized: false };
 }
 
+// Zvýšit timeout pro pomalá připojení (Supabase free tier)
+poolConfig.connectionTimeoutMillis = 10000; // 10 sekund
+poolConfig.idleTimeoutMillis = 30000; // 30 sekund idle timeout
+
 const pool = new Pool(poolConfig);
+
+// Better error handling
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+});
 
 module.exports = pool;
