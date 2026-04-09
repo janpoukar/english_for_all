@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminPanel from "./pages/AdminPanel";
 import TutorDashboard from "./pages/TutorDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 
@@ -30,6 +31,7 @@ function App() {
             <Route path="/register" element={<Navigate to="/login" replace />} />
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route path="/admin-panel" element={<AdminPanel />} />
             <Route path="/tutor-dashboard" element={<TutorDashboard />} />
             <Route path="/student-dashboard" element={<StudentDashboard />} />
           </Routes>

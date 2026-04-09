@@ -270,20 +270,30 @@ export const registerUser = async (email, password, name, role = "student") => {
 };
 
 export const loginAdmin = async (email, password) => {
-  const normalizedEmail = (email || "").trim().toLowerCase();
-  if (normalizedEmail !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
-    throw new Error("Neplatné přihlašovací údaje správce");
-  }
+  // Zkusit přihlášení přes backend (pokud admin existuje v DB)
+  try {
+    const response = await loginUser(email, password);
+    if (response.user.role === 'admin') {
+      return response;
+    }
+    throw new Error('Nemáš oprávnění admina');
+  } catch (err) {
+    // Fallback na lokální ověření pro vývojářské účely
+    const normalizedEmail = (email || "").trim().toLowerCase();
+    if (normalizedEmail !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
+      throw new Error("Neplatné přihlašovací údaje správce");
+    }
 
-  return {
-    token: "admin-local-token",
-    user: {
-      id: "admin-local",
-      name: "Správce",
-      email: ADMIN_EMAIL,
-      role: "admin",
-    },
-  };
+    return {
+      token: "admin-local-token-" + Date.now(),
+      user: {
+        id: "admin-local",
+        name: "Správce",
+        email: ADMIN_EMAIL,
+        role: "admin",
+      },
+    };
+  }
 };
 
 export const createUser = async (userData) => {
