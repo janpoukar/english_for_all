@@ -172,6 +172,15 @@ export default function AdminDashboard() {
 
     try {
       const token = localStorage.getItem("authToken");
+      
+      if (!token) {
+        setPasswordMessage("❌ Jste odhlášeni. Přihlaste se znovu.");
+        setPasswordChanging(false);
+        return;
+      }
+
+      console.log("Odesílám request se user ID:", selectedUserForPassword);
+      
       const response = await fetch("/api/auth/admin/change-password", {
         method: "POST",
         headers: {
@@ -185,9 +194,10 @@ export default function AdminDashboard() {
       });
 
       const data = await response.json();
+      console.log("Response status:", response.status, "Data:", data);
 
       if (!response.ok) {
-        setPasswordMessage("❌ " + (data.error || "Chyba"));
+        setPasswordMessage("❌ " + (data.error || "Chyba: " + response.status));
         return;
       }
 
@@ -196,7 +206,8 @@ export default function AdminDashboard() {
       setSelectedUserForPassword(null);
       setTimeout(() => setPasswordMessage(""), 3000);
     } catch (err) {
-      setPasswordMessage("❌ " + err.message);
+      console.error("Chyba při změně hesla:", err);
+      setPasswordMessage("❌ " + (err.message || "Síťová chyba"));
     } finally {
       setPasswordChanging(false);
     }

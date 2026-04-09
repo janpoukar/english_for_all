@@ -109,8 +109,12 @@ router.post('/admin/change-password', verifyAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Heslo musí mít alespoň 6 znaků' });
     }
 
-    // Zkontroluj, že uživatel existuje
-    const userExists = await pool.query('SELECT id FROM users WHERE id=$1', [userId]);
+    // Zkontroluj, že uživatel existuje (s proper UUID casting)
+    const userExists = await pool.query(
+      'SELECT id FROM users WHERE id = $1::uuid',
+      [userId]
+    );
+    
     if (userExists.rows.length === 0) {
       return res.status(404).json({ error: 'Uživatel nebyl nalezen' });
     }
@@ -118,14 +122,14 @@ router.post('/admin/change-password', verifyAdmin, async (req, res) => {
     // Hashuj nové heslo a ulož
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await pool.query(
-      'UPDATE users SET password_hash=$1 WHERE id=$2',
+      'UPDATE users SET password_hash=$1 WHERE id=$2::uuid',
       [hashedPassword, userId]
     );
 
     res.json({ success: true, message: 'Heslo bylo změněno' });
   } catch (err) {
     console.error('Change password error:', err);
-    res.status(500).json({ error: 'Chyba při změně hesla' });
+    res.status(500).json({ error: 'Chyba při změně hesla: ' + err.message });
   }
 });
 
