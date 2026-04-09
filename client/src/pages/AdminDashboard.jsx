@@ -29,6 +29,12 @@ export default function AdminDashboard() {
   const [lessons, setLessons] = useState([]);
   const [newsletterSettings, setNewsletterSettings] = useState(defaultNewsletterSettings);
 
+  // State pro změnu hesla
+  const [selectedUserForPassword, setSelectedUserForPassword] = useState(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordChanging, setPasswordChanging] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState("");
+
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
@@ -149,6 +155,53 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (!selectedUserForPassword || !newPassword) {
+      setPasswordMessage("Vyber uživatele a vlož heslo");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordMessage("Heslo musí mít alespoň 6 znaků");
+      return;
+    }
+
+    setPasswordChanging(true);
+    setPasswordMessage("");
+
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch("/api/auth/admin/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userId: selectedUserForPassword,
+          newPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setPasswordMessage("❌ " + (data.error || "Chyba"));
+        return;
+      }
+
+      setPasswordMessage("✅ Heslo bylo změněno!");
+      setNewPassword("");
+      setSelectedUserForPassword(null);
+      setTimeout(() => setPasswordMessage(""), 3000);
+    } catch (err) {
+      setPasswordMessage("❌ " + err.message);
+    } finally {
+      setPasswordChanging(false);
+    }
+  };
+
   const handleCreateQuickLesson = async () => {
     const now = new Date();
     const date = now.toISOString().slice(0, 10);
@@ -251,6 +304,55 @@ export default function AdminDashboard() {
               Uložit newsletter
             </button>
           </div>
+        </section>
+
+        <section className="bg-white rounded-xl border border-slate-200 p-4 md:p-5">
+          <h2 className="text-xl font-bold text-slate-900 mb-4">🔐 Změna hesla uživatele</h2>
+          
+          {passwordMessage && (
+            <div className={`rounded-lg p-3 mb-4 ${passwordMessage.startsWith("✅") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+              {passwordMessage}
+            </div>
+          )}
+
+          <form onSubmit={handleChangePassword} className="space-y-3">
+            <div>
+              <label className="text-sm font-semibold text-slate-700">Vyber uživatele</label>
+              <select
+                value={selectedUserForPassword || ""}
+                onChange={(e) => setSelectedUserForPassword(e.target.value)}
+                className="form-input"
+                required
+              >
+                <option value="">-- Vyberte uživatele --</option>
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} ({u.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-slate-700">Nové heslo (min 6 znaků)</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="form-input"
+                placeholder="Nové heslo"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={passwordChanging}
+              className="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-semibold disabled:opacity-50"
+            >
+              {passwordChanging ? "Změňuji..." : "Změnit heslo"}
+            </button>
+          </form>
         </section>
 
         <section className="bg-white rounded-xl border border-slate-200 p-4 md:p-5">
