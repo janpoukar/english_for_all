@@ -35,7 +35,15 @@ export default function AdminDashboard() {
   const [newsletterLoading, setNewsletterLoading] = useState(false);
   const [newsletterSaving, setNewsletterSaving] = useState(false);
   const [newsletterMessage, setNewsletterMessage] = useState("");
-  const [newsletterCampaign, setNewsletterCampaign] = useState({ subject: "", body: "" });
+  const [newsletterCampaign, setNewsletterCampaign] = useState({
+    subject: "",
+    preheader: "",
+    imageUrl: "",
+    imageAlt: "",
+    ctaText: "",
+    ctaUrl: "",
+    body: "",
+  });
   const [newsletterSending, setNewsletterSending] = useState(false);
 
   // State pro změnu hesla
@@ -254,7 +262,15 @@ export default function AdminDashboard() {
       const token = localStorage.getItem("authToken");
       const result = await sendNewsletterCampaign(newsletterCampaign, token);
       setNewsletterMessage(`✅ ${result.message}`);
-      setNewsletterCampaign({ subject: "", body: "" });
+      setNewsletterCampaign({
+        subject: "",
+        preheader: "",
+        imageUrl: "",
+        imageAlt: "",
+        ctaText: "",
+        ctaUrl: "",
+        body: "",
+      });
     } catch (err) {
       setNewsletterMessage("❌ " + (err.message || "Nepodařilo se připravit newsletter"));
     } finally {
@@ -355,24 +371,80 @@ export default function AdminDashboard() {
         <section className="bg-white rounded-xl border border-slate-200 p-4 md:p-5">
           <h2 className="text-xl font-bold text-slate-900 mb-4">Rozeslání newsletteru</h2>
           <form onSubmit={handleSendNewsletter} className="space-y-3">
+            <div className="grid md:grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-semibold text-slate-700">Předmět</label>
+                <input
+                  className="form-input mt-1"
+                  value={newsletterCampaign.subject}
+                  onChange={(event) => setNewsletterCampaign((prev) => ({ ...prev, subject: event.target.value }))}
+                  placeholder="Např. Novinky z výuky angličtiny"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-slate-700">Preheader</label>
+                <input
+                  className="form-input mt-1"
+                  value={newsletterCampaign.preheader}
+                  onChange={(event) => setNewsletterCampaign((prev) => ({ ...prev, preheader: event.target.value }))}
+                  placeholder="Krátký text do náhledu schránky"
+                />
+              </div>
+            </div>
+
             <div>
-              <label className="text-sm font-semibold text-slate-700">Předmět</label>
+              <label className="text-sm font-semibold text-slate-700">URL obrázku</label>
               <input
                 className="form-input mt-1"
-                value={newsletterCampaign.subject}
-                onChange={(event) => setNewsletterCampaign((prev) => ({ ...prev, subject: event.target.value }))}
-                placeholder="Např. Novinky z výuky angličtiny"
+                value={newsletterCampaign.imageUrl}
+                onChange={(event) => setNewsletterCampaign((prev) => ({ ...prev, imageUrl: event.target.value }))}
+                placeholder="https://.../obrazek.jpg"
               />
             </div>
+
+            <div className="grid md:grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-semibold text-slate-700">Alt text obrázku</label>
+                <input
+                  className="form-input mt-1"
+                  value={newsletterCampaign.imageAlt}
+                  onChange={(event) => setNewsletterCampaign((prev) => ({ ...prev, imageAlt: event.target.value }))}
+                  placeholder="Popis obrázku"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-slate-700">Text tlačítka</label>
+                <input
+                  className="form-input mt-1"
+                  value={newsletterCampaign.ctaText}
+                  onChange={(event) => setNewsletterCampaign((prev) => ({ ...prev, ctaText: event.target.value }))}
+                  placeholder="Např. Zjistit více"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-slate-700">Odkaz tlačítka</label>
+              <input
+                className="form-input mt-1"
+                value={newsletterCampaign.ctaUrl}
+                onChange={(event) => setNewsletterCampaign((prev) => ({ ...prev, ctaUrl: event.target.value }))}
+                placeholder="https://..."
+              />
+            </div>
+
             <div>
               <label className="text-sm font-semibold text-slate-700">Text newsletteru</label>
               <textarea
-                className="form-textarea mt-1 min-h-[140px] text-slate-900 placeholder:text-slate-500"
+                className="form-textarea mt-1 min-h-[220px] text-slate-900 placeholder:text-slate-500 font-mono text-sm"
                 value={newsletterCampaign.body}
                 onChange={(event) => setNewsletterCampaign((prev) => ({ ...prev, body: event.target.value }))}
-                placeholder="Napiš text newsletteru..."
+                placeholder={"Můžeš psát čistý text nebo HTML.\n\nNapříklad:\n<h1>Nový kurz</h1>\n<p>Podívejte se na nové lekce.</p>"}
               />
             </div>
+            <p className="text-xs text-slate-500">
+              E-mail se odešle všem uživatelům v databázi s vyplněným e-mailem. Obrázek lze vložit přes URL.
+            </p>
             <button
               type="submit"
               disabled={newsletterSending}
