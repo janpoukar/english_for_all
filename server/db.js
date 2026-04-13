@@ -17,6 +17,10 @@ if (useSsl) {
   poolConfig.ssl = { rejectUnauthorized: false };
 }
 
+// Supabase connection attempts can resolve to IPv6 on some hosts and fail with ENETUNREACH.
+// Force IPv4 so the backend uses the working route consistently.
+poolConfig.family = 4;
+
 // Zvýšit timeout pro pomalá připojení (Supabase free tier)
 poolConfig.connectionTimeoutMillis = 10000; // 10 sekund
 poolConfig.idleTimeoutMillis = 30000; // 30 sekund idle timeout
