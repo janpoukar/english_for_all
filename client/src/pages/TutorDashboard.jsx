@@ -8,6 +8,7 @@ import {
   fetchLessons,
   fetchMaterials,
   fetchUsers,
+  resolveFileUrl,
   updateAssignment,
   updateLesson,
   uploadMaterial,
@@ -635,9 +636,8 @@ export default function TutorDashboard() {
     setSaving(true);
     try {
       await uploadMaterial({
-        lesson_id: selectedLesson.id,
-        file_name: uploadedFile.name,
-        file_url: `local://${uploadedFile.name}`,
+        lessonId: selectedLesson.id,
+        file: uploadedFile,
       });
       alert("Materiál byl uložen k lekci.");
       setUploadedFile(null);
@@ -1146,7 +1146,16 @@ export default function TutorDashboard() {
                       {materials.map((material) => (
                         <div key={material.id} className="border border-orange-200 rounded-lg p-2 bg-white">
                           <p className="text-sm font-semibold text-gray-900">{material.file_name || "Materiál"}</p>
-                          {material.file_url && <p className="text-xs text-gray-500 mt-1 truncate">{material.file_url}</p>}
+                          {material.file_url && (
+                            <a
+                              href={resolveFileUrl(material.file_url)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs text-blue-700 mt-1 inline-block truncate hover:underline"
+                            >
+                              Otevřít soubor
+                            </a>
+                          )}
                         </div>
                       ))}
                     </div>

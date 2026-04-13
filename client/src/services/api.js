@@ -72,8 +72,13 @@ export const fetchLessons = async () => {
     
     return await supabaseFetch("/lessons?order=date.asc");
   } catch (error) {
-    console.error("Error fetching lessons:", error);
-    throw error;
+    try {
+      const response = await fetch(`${API_BASE}/lessons`);
+      return await parseJsonResponse(response, "Nepodařilo se načíst lekce");
+    } catch (fallbackError) {
+      console.error("Error fetching lessons:", error);
+      throw fallbackError;
+    }
   }
 };
 
@@ -98,8 +103,17 @@ export const createLesson = async (lessonData) => {
     });
     return Array.isArray(result) ? result[0] : result;
   } catch (error) {
-    console.error("Error creating lesson:", error);
-    throw error;
+    try {
+      const response = await fetch(`${API_BASE}/lessons`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(lessonData),
+      });
+      return await parseJsonResponse(response, "Nepodařilo se vytvořit lekci");
+    } catch (fallbackError) {
+      console.error("Error creating lesson:", error);
+      throw fallbackError;
+    }
   }
 };
 
@@ -114,8 +128,17 @@ export const updateLesson = async (id, updates) => {
     });
     return Array.isArray(result) ? result[0] : result;
   } catch (error) {
-    console.error("Error updating lesson:", error);
-    throw error;
+    try {
+      const response = await fetch(`${API_BASE}/lessons/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      return await parseJsonResponse(response, "Nepodařilo se upravit lekci");
+    } catch (fallbackError) {
+      console.error("Error updating lesson:", error);
+      throw fallbackError;
+    }
   }
 };
 
@@ -126,8 +149,16 @@ export const deleteLesson = async (id) => {
     });
     return true;
   } catch (error) {
-    console.error("Error deleting lesson:", error);
-    throw error;
+    try {
+      const response = await fetch(`${API_BASE}/lessons/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      await parseJsonResponse(response, "Nepodařilo se smazat lekci");
+      return true;
+    } catch (fallbackError) {
+      console.error("Error deleting lesson:", error);
+      throw fallbackError;
+    }
   }
 };
 
@@ -161,11 +192,17 @@ export const fetchMaterials = async (lessonId) => {
   }
 };
 
-export const uploadMaterial = async ({ lessonId, file }) => {
+export const uploadMaterial = async (payload) => {
   try {
+    const lessonId = payload?.lessonId || payload?.lesson_id;
+    const file = payload?.file;
+
     const formData = new FormData();
     formData.append("lesson_id", lessonId);
-    formData.append("file", file);
+
+    if (file instanceof File) {
+      formData.append("file", file);
+    }
 
     const response = await fetch(`${API_BASE}/materials`, {
       method: "POST",
