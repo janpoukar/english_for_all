@@ -31,7 +31,8 @@ export default function Home() {
     {
       name: "Učebna v centru Jihlavy",
       address: "Centrum města Jihlavy",
-      image: "🏰",
+      imageSrc: "/pictures/jihlava_center.png",
+      imageAlt: "Učebna v centru Jihlavy",
       info: "Příjemná učebna v centru města s dobrou dostupností a klidnou atmosférou pro výuku.",
       features: ["Snadná dostupnost", "Moderní vybavení", "Přátelská atmosféra"]
     }
@@ -219,30 +220,44 @@ export default function Home() {
 
           <div className="grid md:grid-cols-1 gap-6 md:gap-8 max-w-xl mx-auto">
             {locations.map((location, idx) => (
-              <div key={idx} className="animate-fade-in-up hover-lift" style={{ animationDelay: `${idx * 0.15}s` }}>
-                <div className="relative h-full overflow-hidden rounded-[32px] border border-blue-100/80 bg-white/95 p-6 md:p-8 shadow-[0_20px_60px_rgba(0,71,171,0.12)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_30px_80px_rgba(0,71,171,0.18)]">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-red-50 opacity-90"></div>
+              <div key={idx} className="animate-fade-in-up" style={{ animationDelay: `${idx * 0.15}s` }}>
+                <div className="group relative h-full overflow-hidden rounded-[34px] border border-blue-100/80 bg-white/95 shadow-[0_20px_60px_rgba(0,71,171,0.12)] transition-all duration-500 transform-gpu will-change-transform hover:-translate-y-2 hover:shadow-[0_30px_80px_rgba(0,71,171,0.18)]">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-red-50 opacity-95"></div>
                   <div className="absolute -top-16 right-0 h-40 w-40 rounded-full bg-blue-200/25 blur-3xl"></div>
                   <div className="absolute -bottom-12 -left-10 h-32 w-32 rounded-full bg-red-200/20 blur-3xl"></div>
+                  <div className="absolute inset-0 rounded-[34px] ring-1 ring-inset ring-white/60 pointer-events-none"></div>
 
                   <div className="relative z-10">
-                    <div className="bg-gradient-to-br from-blue-900 via-blue-800 to-red-700 text-center p-6 md:p-8 mb-6 rounded-[28px] text-6xl md:text-7xl shadow-[0_18px_40px_rgba(15,23,42,0.18)] ring-1 ring-white/20">
-                      {location.image}
+                    <div className="relative overflow-hidden rounded-[30px] m-6 md:m-7 shadow-[0_18px_40px_rgba(15,23,42,0.18)] ring-1 ring-white/30 bg-gradient-to-br from-blue-900 via-blue-800 to-red-700">
+                      <div className="absolute inset-0 bg-black/10"></div>
+                      <img
+                        src={location.imageSrc}
+                        alt={location.imageAlt}
+                        className="block w-full h-56 md:h-64 object-cover"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent p-5 md:p-6">
+                        <div className="inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-xs font-semibold tracking-wide text-blue-900 border border-blue-100 backdrop-blur">
+                          <span className="text-base">📍</span>
+                          Klidné místo pro výuku
+                        </div>
+                      </div>
                     </div>
-                    <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-xs font-semibold tracking-wide text-blue-900 mb-4 border border-blue-100">
-                      <span className="text-base">📍</span>
-                      Klidné místo pro výuku
-                    </div>
-                    <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">{location.name}</h3>
-                    <p className="text-gray-600 mb-4 text-sm md:text-base font-semibold">{location.address}</p>
-                    <p className="text-gray-700 mb-6 text-xs md:text-sm leading-relaxed">{location.info}</p>
-                    <div className="space-y-2 border-t border-blue-100 pt-4 md:pt-6">
-                      {location.features.map((feature, i) => (
-                        <p key={i} className="text-xs md:text-sm text-gray-600 flex items-center">
-                          <span className="text-primary font-bold mr-2">✓</span>
-                          {feature}
-                        </p>
-                      ))}
+
+                    <div className="px-6 md:px-8 pb-6 md:pb-8">
+                      <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">{location.name}</h3>
+                      <p className="text-gray-600 mb-4 text-sm md:text-base font-semibold">{location.address}</p>
+                      <p className="text-gray-700 mb-6 text-xs md:text-sm leading-relaxed">{location.info}</p>
+                      <div className="grid gap-2 border-t border-blue-100 pt-4 md:pt-6">
+                        {location.features.map((feature, i) => (
+                          <div key={i} className="flex items-center gap-3 text-xs md:text-sm text-gray-700 rounded-xl bg-white/70 px-4 py-3 border border-blue-100/70">
+                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 text-white text-[10px] font-bold flex-shrink-0 shadow-sm">
+                              ✓
+                            </span>
+                            <span>{feature}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
