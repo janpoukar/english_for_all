@@ -32,4 +32,36 @@ pool.on('error', (err) => {
   console.error('Unexpected error on idle client', err);
 });
 
+// Initialize database schema on startup
+const initializeSchema = async () => {
+  try {
+    console.log('Initializing database schema...');
+
+    // Create materials table if it doesn't exist
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS materials (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        lesson_id UUID NOT NULL,
+        file_name TEXT NOT NULL,
+        file_url TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW(),
+        FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE
+      );
+    `);
+
+    // Create index for faster lesson_id lookups
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_materials_lesson_id 
+      ON materials(lesson_id);
+    `);
+
+    console.log('Database schema initialized successfully');
+  } catch (err) {
+    console.error('Error initializing database schema:', err.message);
+  }
+};
+
+// Run schema initialization when module loads
+initializeSchema().catch(err => console.error('Failed to initialize schema:', err));
+
 module.exports = pool;

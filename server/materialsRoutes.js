@@ -25,29 +25,36 @@ router.get('/', async (req, res) => {
   const { lesson_id: lessonId } = req.query;
 
   if (!lessonId) {
+    console.warn('[MATERIALS] GET / missing lesson_id');
     return res.status(400).json({ error: 'Chybí lesson_id' });
   }
 
   try {
+    console.log(`[MATERIALS] Fetching materials for lesson: ${lessonId}`);
     const result = await pool.query(
       'SELECT id, lesson_id, file_name, file_url, created_at FROM materials WHERE lesson_id = $1 ORDER BY created_at DESC',
       [lessonId]
     );
+    console.log(`[MATERIALS] Found ${result.rows.length} materials for lesson ${lessonId}`);
     res.json(result.rows);
   } catch (err) {
-    console.error('Fetch materials error:', err);
-    res.status(500).json({ error: 'Chyba při načítání materiálů' });
+    console.error('[MATERIALS] Fetch materials error:', err.message, err.code);
+    res.status(500).json({ error: `Chyba při načítání materiálů: ${err.message}` });
   }
 });
 
 router.post('/', upload.single('file'), async (req, res) => {
   const { lesson_id: lessonId } = req.body;
 
+  console.log(`[MATERIALS] POST / - lesson_id: ${lessonId}, file: ${req.file?.filename || 'None'}`);
+
   if (!lessonId) {
+    console.warn('[MATERIALS] POST / missing lesson_id');
     return res.status(400).json({ error: 'Chybí lesson_id' });
   }
 
   if (!req.file) {
+    console.warn('[MATERIALS] POST / missing file');
     return res.status(400).json({ error: 'Nebyl nahrán žádný soubor' });
   }
 
@@ -55,15 +62,17 @@ router.post('/', upload.single('file'), async (req, res) => {
   const fileUrl = `/uploads/${req.file.filename}`;
 
   try {
+    console.log(`[MATERIALS] Saving material: ${fileName} for lesson ${lessonId}`);
     const result = await pool.query(
       'INSERT INTO materials (lesson_id, file_name, file_url) VALUES ($1, $2, $3) RETURNING id, lesson_id, file_name, file_url, created_at',
       [lessonId, fileName, fileUrl]
     );
 
+    console.log(`[MATERIALS] Material saved successfully: ${result.rows[0].id}`);
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error('Create material error:', err);
-    res.status(500).json({ error: 'Chyba při ukládání materiálu' });
+    console.error('[MATERIALS] Create material error:', err.message, err.code);
+    res.status(500).json({ error: `Chyba při ukládání materiálu: ${err.message}` });
   }
 });
 

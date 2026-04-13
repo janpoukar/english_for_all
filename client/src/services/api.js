@@ -184,11 +184,21 @@ export const fetchTutors = async () => {
 // Materials from Supabase
 export const fetchMaterials = async (lessonId) => {
   try {
-    const response = await fetch(`${API_BASE}/materials?lesson_id=${encodeURIComponent(lessonId)}`);
-    return await parseJsonResponse(response, "Nepodařilo se načíst materiály");
+    if (!lessonId) {
+      console.warn("fetchMaterials: missing lessonId");
+      return [];
+    }
+    
+    const url = `${API_BASE}/materials?lesson_id=${encodeURIComponent(lessonId)}`;
+    console.log(`[DEBUG] Fetching materials from: ${url}`);
+    
+    const response = await fetch(url);
+    const result = await parseJsonResponse(response, "Nepodařilo se načíst materiály");
+    console.log(`[DEBUG] Materials fetched:`, result);
+    return result;
   } catch (error) {
-    console.error("Error fetching materials:", error);
-    throw error;
+    console.error("Error fetching materials:", error, { lessonId });
+    throw new Error(`Chyba při načítání materiálů: ${error?.message || "neznáma chyba"}`);
   }
 };
 
@@ -197,22 +207,34 @@ export const uploadMaterial = async (payload) => {
     const lessonId = payload?.lessonId || payload?.lesson_id;
     const file = payload?.file;
 
-    const formData = new FormData();
-    formData.append("lesson_id", lessonId);
-
-    if (file instanceof File) {
-      formData.append("file", file);
+    if (!lessonId) {
+      throw new Error("Chybí ID lekce");
     }
 
-    const response = await fetch(`${API_BASE}/materials`, {
+    if (!file) {
+      throw new Error("Chybí soubor");
+    }
+
+    console.log(`[DEBUG] Uploading material:`, { lessonId, fileName: file.name, fileSize: file.size });
+
+    const formData = new FormData();
+    formData.append("lesson_id", lessonId);
+    formData.append("file", file);
+
+    const url = `${API_BASE}/materials`;
+    console.log(`[DEBUG] POST to: ${url}`);
+
+    const response = await fetch(url, {
       method: "POST",
       body: formData,
     });
 
-    return await parseJsonResponse(response, "Nepodařilo se uložit materiál");
+    const result = await parseJsonResponse(response, "Nepodařilo se uložit materiál");
+    console.log(`[DEBUG] Material uploaded successfully:`, result);
+    return result;
   } catch (error) {
     console.error("Error uploading material:", error);
-    throw error;
+    throw new Error(`Chyba při nahrávání materiálu: ${error?.message || "neznámá chyba"}`);
   }
 };
 
