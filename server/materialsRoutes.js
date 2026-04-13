@@ -2,7 +2,6 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
-const pool = require('./db');
 
 const router = express.Router();
 
@@ -21,6 +20,47 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
+
+const supabaseFetch = async (endpoint, options = {}) => {
+  const url = `${SUPABASE_URL}/rest/v1${endpoint}`;
+  const headers = {
+    "apikey": SUPABASE_KEY,
+    "Content-Type": "application/json",
+    ...options.headers,
+  };
+  
+  const response = await fetch(url, { ...options, headers });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    let message = `HTTP ${response.status}`;
+
+    if (errorText) {
+      try {
+        const parsed = JSON.parse(errorText);
+        message = parsed?.message || parsed?.error || message;
+      } catch {
+        message = errorText;
+      }
+    }
+
+    throw new Error(message);
+  }
+
+  if (response.status === 204) {
+    return null;
+  }
+
+  const text = await response.text();
+  if (!text) {
+    return null;
+  }
+
+  return JSON.parse(text);
+};
+
 router.get('/', async (req, res) => {
   const { lesson_id: lessonId } = req.query;
 
@@ -31,14 +71,12 @@ router.get('/', async (req, res) => {
 
   try {
     console.log(`[MATERIALS] Fetching materials for lesson: ${lessonId}`);
-    const result = await pool.query(
-      'SELECT id, lesson_id, file_name, file_url, created_at FROM materials WHERE lesson_id = $1 ORDER BY created_at DESC',
-      [lessonId]
-    );
-    console.log(`[MATERIALS] Found ${result.rows.length} materials for lesson ${lessonId}`);
-    res.json(result.rows);
+    const result = await supabaseFetch(`/materials?lesson_id=eq.${encodeURIComponent(lessonId)}&order=created_at.desc`);
+    const materials = Array.isArray(result) ? result : [];
+    console.log(`[MATERIALS] Found ${materials.length} materials for lesson ${lessonId}`);
+    res.json(materials);
   } catch (err) {
-    console.error('[MATERIALS] Fetch materials error:', err.message, err.code);
+    console.error('[MATERIALS] Fetch materials error:', err.message);
     res.status(500).json({ error: `Chyba při načítání materiálů: ${err.message}` });
   }
 });
@@ -62,16 +100,24 @@ router.post('/', upload.single('file'), async (req, res) => {
   const fileUrl = `/uploads/${req.file.filename}`;
 
   try {
-    console.log(`[MATERIALS] Saving material: ${fileName} for lesson ${lessonId}`);
-    const result = await pool.query(
-      'INSERT INTO materials (lesson_id, file_name, file_url) VALUES ($1, $2, $3) RETURNING id, lesson_id, file_name, file_url, created_at',
-      [lessonId, fileName, fileUrl]
-    );
+    console.log(`[MATERIALS] Saving material metadata to Supabase: ${fileName} for lesson ${lessonId}`);
+    const result = await supabaseFetch('/materials', {
+      method: "POST",
+      headers: {
+        "Prefer": "return=representation"
+      },
+      body: JSON.stringify({
+        lesson_id: lessonId,
+        file_name: fileName,
+        file_url: fileUrl,
+      })
+    });
 
-    console.log(`[MATERIALS] Material saved successfully: ${result.rows[0].id}`);
-    res.status(201).json(result.rows[0]);
+    const material = Array.isArray(result) ? result[0] : result;
+    console.log(`[MATERIALS] Material saved successfully: ${material?.id}`);
+    res.status(201).json(material);
   } catch (err) {
-    console.error('[MATERIALS] Create material error:', err.message, err.code);
+    console.error('[MATERIALS] Create material error:', err.message);
     res.status(500).json({ error: `Chyba při ukládání materiálu: ${err.message}` });
   }
 });
@@ -80,12 +126,9 @@ router.get('/:id/download', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await pool.query(
-      'SELECT file_name, file_url FROM materials WHERE id = $1 LIMIT 1',
-      [id]
-    );
+    const result = await supabaseFetch(`/materials?id=eq.${encodeURIComponent(id)}`);
+    const material = Array.isArray(result) ? result[0] : null;
 
-    const material = result.rows[0];
     if (!material) {
       return res.status(404).json({ error: 'Materiál nebyl nalezen' });
     }
@@ -103,8 +146,8 @@ router.get('/:id/download', async (req, res) => {
 
     return res.download(absoluteFilePath, material.file_name || storedFileName);
   } catch (err) {
-    console.error('Download material error:', err);
-    return res.status(500).json({ error: 'Chyba při stahování materiálu' });
+    console.error('[MATERIALS] Download material error:', err.message);
+    return res.status(500).json({ error: `Chyba při stahování materiálu: ${err.message}` });
   }
 });
 
