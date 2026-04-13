@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Card from "../components/ui/Card";
-import { fetchLessons } from "../services/api";
+import { fetchAssignments, fetchLessons, fetchMaterials } from "../services/api";
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -10,6 +10,9 @@ export default function StudentDashboard() {
   const [error, setError] = useState("");
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [user, setUser] = useState(null);
+  const [lessonMaterials, setLessonMaterials] = useState([]);
+  const [lessonAssignments, setLessonAssignments] = useState([]);
+  const [resourceLoading, setResourceLoading] = useState(false);
 
   useEffect(() => {
     // Ověř, že je uživatel přihlášen
@@ -49,6 +52,33 @@ export default function StudentDashboard() {
     localStorage.removeItem("authToken");
     navigate("/");
   };
+
+  useEffect(() => {
+    const loadLessonResources = async () => {
+      if (!selectedLesson?.id) {
+        setLessonMaterials([]);
+        setLessonAssignments([]);
+        return;
+      }
+
+      try {
+        setResourceLoading(true);
+        const [materialsData, assignmentsData] = await Promise.all([
+          fetchMaterials(selectedLesson.id),
+          fetchAssignments(selectedLesson.id),
+        ]);
+        setLessonMaterials(Array.isArray(materialsData) ? materialsData : []);
+        setLessonAssignments(Array.isArray(assignmentsData) ? assignmentsData : []);
+      } catch {
+        setLessonMaterials([]);
+        setLessonAssignments([]);
+      } finally {
+        setResourceLoading(false);
+      }
+    };
+
+    loadLessonResources();
+  }, [selectedLesson]);
 
   const upcomingLessons = lessons.filter(
     lesson => new Date(lesson.date) >= new Date()
@@ -250,17 +280,70 @@ export default function StudentDashboard() {
             {/* Materials Section */}
             <div className="mt-6 mb-6">
               <h3 className="font-bold text-lg text-gray-900 mb-4">📎 Materiály k lekci</h3>
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 text-center">
-                <p className="text-gray-600">Lektor zatím nepřidal žádné materiály</p>
-              </div>
+              {resourceLoading ? (
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 text-center">
+                  <p className="text-gray-600">Načítám materiály…</p>
+                </div>
+              ) : lessonMaterials.length === 0 ? (
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 text-center">
+                  <p className="text-gray-600">Lektor zatím nepřidal žádné materiály</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {lessonMaterials.map((material) => {
+                    const url = material.file_url || "";
+                    const external = /^https?:\/\//i.test(url);
+                    return (
+                      <div key={material.id} className="bg-blue-50 p-3 rounded-lg border border-blue-200 flex items-center justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-gray-800 text-sm">{material.file_name || "Materiál"}</p>
+                          {material.created_at && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Přidáno: {new Date(material.created_at).toLocaleDateString("cs-CZ")}
+                            </p>
+                          )}
+                        </div>
+                        {external ? (
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="btn-secondary text-sm px-3 py-1.5 whitespace-nowrap"
+                          >
+                            Otevřít
+                          </a>
+                        ) : (
+                          <span className="text-xs text-gray-500">Soubor uložen</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Tasks Section */}
             <div className="mt-6 mb-6">
               <h3 className="font-bold text-lg text-gray-900 mb-4">✅ Úkoly</h3>
-              <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 text-center">
-                <p className="text-gray-600">Žádné úkoly pro tuto lekci</p>
-              </div>
+              {resourceLoading ? (
+                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 text-center">
+                  <p className="text-gray-600">Načítám úkoly…</p>
+                </div>
+              ) : lessonAssignments.length === 0 ? (
+                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 text-center">
+                  <p className="text-gray-600">Žádné úkoly pro tuto lekci</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {lessonAssignments.map((assignment) => (
+                    <div key={assignment.id} className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                      <p className="font-semibold text-gray-800 text-sm">{assignment.title}</p>
+                      {assignment.description && <p className="text-sm text-gray-600 mt-1">{assignment.description}</p>}
+                      <p className="text-xs text-gray-500 mt-2">Termín: {assignment.due_date || "Není zadán"}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}

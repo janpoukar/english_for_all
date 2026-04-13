@@ -6,6 +6,7 @@ import {
   deleteLesson,
   fetchAssignments,
   fetchLessons,
+  fetchMaterials,
   fetchUsers,
   updateAssignment,
   updateLesson,
@@ -172,6 +173,7 @@ export default function TutorDashboard() {
   const [resourceModalOpen, setResourceModalOpen] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [materials, setMaterials] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [editingAssignment, setEditingAssignment] = useState(null);
   const [assignmentTitle, setAssignmentTitle] = useState("");
@@ -564,6 +566,16 @@ export default function TutorDashboard() {
     }
   };
 
+  const loadMaterialsForLesson = async (lessonId) => {
+    try {
+      const data = await fetchMaterials(lessonId);
+      setMaterials(Array.isArray(data) ? data : []);
+    } catch (err) {
+      alert("Chyba při načítání materiálů: " + (err?.message || "neznámá chyba"));
+      setMaterials([]);
+    }
+  };
+
   const openResourceModal = (lesson) => {
     setSelectedLesson(lesson);
     setResourceModalOpen(true);
@@ -572,7 +584,9 @@ export default function TutorDashboard() {
     setAssignmentDescription("");
     setAssignmentDueDate(lesson.date || "");
     setEditingAssignment(null);
+    setMaterials([]);
     setAssignments([]);
+    loadMaterialsForLesson(lesson.id);
     loadAssignmentsForLesson(lesson.id);
   };
 
@@ -583,6 +597,7 @@ export default function TutorDashboard() {
     setAssignmentTitle("");
     setAssignmentDescription("");
     setAssignmentDueDate("");
+    setMaterials([]);
     setAssignments([]);
     setEditingAssignment(null);
   };
@@ -626,6 +641,7 @@ export default function TutorDashboard() {
       });
       alert("Materiál byl uložen k lekci.");
       setUploadedFile(null);
+      await loadMaterialsForLesson(selectedLesson.id);
     } catch (err) {
       alert("Chyba při ukládání materiálu: " + (err?.message || "neznámá chyba"));
     } finally {
@@ -1120,6 +1136,22 @@ export default function TutorDashboard() {
                 >
                   Uložit materiál
                 </button>
+
+                <div className="mt-5 pt-4 border-t border-orange-200">
+                  <h4 className="font-semibold text-gray-800 mb-2">Uložené materiály</h4>
+                  {materials.length === 0 ? (
+                    <p className="text-sm text-gray-500">Zatím nejsou žádné materiály.</p>
+                  ) : (
+                    <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
+                      {materials.map((material) => (
+                        <div key={material.id} className="border border-orange-200 rounded-lg p-2 bg-white">
+                          <p className="text-sm font-semibold text-gray-900">{material.file_name || "Materiál"}</p>
+                          {material.file_url && <p className="text-xs text-gray-500 mt-1 truncate">{material.file_url}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="border border-blue-200 bg-blue-50/50 rounded-xl p-4">
