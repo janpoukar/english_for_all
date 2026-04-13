@@ -1,9 +1,19 @@
 // API service for Supabase and backend communication
+import bcrypt from "bcryptjs";
+
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || "admin@english.local";
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || "admin123";
+const DEMO_STUDENT_EMAIL = import.meta.env.VITE_DEMO_STUDENT_EMAIL || "student@demo.cz";
+const DEMO_STUDENT_PASSWORD = import.meta.env.VITE_DEMO_STUDENT_PASSWORD || "demo123";
+const DEMO_STUDENT_PROFILE = {
+  id: "demo-student",
+  name: "David Šimek",
+  email: DEMO_STUDENT_EMAIL,
+  role: "student",
+};
 
 const parseJsonResponse = async (response, fallbackMessage) => {
   const data = await response.json().catch(() => null);
@@ -220,6 +230,7 @@ const buildUserSessionPayload = (user) => ({
 // Auth endpoints (if using backend)
 export const loginUser = async (email, password) => {
   const normalizedEmail = (email || "").trim().toLowerCase();
+  const normalizedDemoEmail = DEMO_STUDENT_EMAIL.trim().toLowerCase();
 
   try {
     const response = await fetch(`${API_BASE}/auth/login`, {
@@ -227,23 +238,51 @@ export const loginUser = async (email, password) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: normalizedEmail, password }),
     });
-    return await parseJsonResponse(response, "Přihlášení selhalo");
+    const data = await response.json().catch(() => null);
+
+    if (response.ok) {
+      return data;
+    }
+
+    const backendMessage = data?.error || data?.message || "Přihlášení selhalo";
+    const fallbackAllowed = /neexistuje|špatné heslo|spoj|connect|timeout|enetunreach|econnrefused/i.test(backendMessage);
+
+    if (!fallbackAllowed) {
+      throw new Error(backendMessage);
+    }
   } catch (error) {
-    // Dev fallback: if backend DB connection is missing, allow login for local seeded demo users.
+    // Dev fallback: if backend DB connection is missing, allow login for local/demo users.
     try {
+      if (!SUPABASE_URL || !SUPABASE_KEY) {
+        if (normalizedEmail === normalizedDemoEmail && password === DEMO_STUDENT_PASSWORD) {
+          return buildUserSessionPayload(DEMO_STUDENT_PROFILE);
+        }
+
+        throw new Error(error.message || "Přihlášení selhalo");
+      }
+
       const result = await supabaseFetch(
         `/users?select=id,name,email,role,password_hash&email=eq.${encodeURIComponent(normalizedEmail)}&limit=1`
       );
       const user = Array.isArray(result) ? result[0] : null;
 
       if (!user) {
+        if (normalizedEmail === normalizedDemoEmail && password === DEMO_STUDENT_PASSWORD) {
+          return buildUserSessionPayload(DEMO_STUDENT_PROFILE);
+        }
+
         throw new Error("Uživatel neexistuje");
       }
 
       const plainMatch = user.password_hash === password;
-      const seededDemoMatch = /@student\.local$/i.test(user.email || "") && password === "demo123";
+      const seededDemoMatch = /@student\.local$/i.test(user.email || "") && password === DEMO_STUDENT_PASSWORD;
+      const bcryptMatch = user.password_hash ? await bcrypt.compare(password, user.password_hash) : false;
 
-      if (!plainMatch && !seededDemoMatch) {
+      if (!plainMatch && !seededDemoMatch && !bcryptMatch) {
+        if (normalizedEmail === normalizedDemoEmail && password === DEMO_STUDENT_PASSWORD) {
+          return buildUserSessionPayload(DEMO_STUDENT_PROFILE);
+        }
+
         throw new Error("Špatné heslo");
       }
 
