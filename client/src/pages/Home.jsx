@@ -34,7 +34,7 @@ export default function Home() {
       imageSrc: "/pictures/jihlava_center.png",
       imageAlt: "Učebna v centru Jihlavy",
       info: "Příjemná učebna v centru města s dobrou dostupností a klidnou atmosférou pro výuku.",
-      features: ["Snadná dostupnost", "Moderní vybavení", "Přátelská atmosféra"]
+      features: ["Snadná dostupnost", "Vybavená učebna", "Přátelská atmosféra"]
     }
   ];
 
@@ -228,23 +228,22 @@ export default function Home() {
                   <div className="absolute inset-0 rounded-[34px] ring-1 ring-inset ring-white/60 pointer-events-none"></div>
 
                   <div className="relative z-10">
-                    <div className="relative overflow-hidden rounded-[30px] m-6 md:m-7 shadow-[0_18px_40px_rgba(15,23,42,0.18)] ring-1 ring-white/30 bg-gradient-to-br from-blue-900 via-blue-800 to-red-700">
-                      <div className="absolute inset-0 bg-black/10"></div>
-                      <img
-                        src={location.imageSrc}
-                        alt={location.imageAlt}
-                        className="block w-full h-56 md:h-64 object-cover"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent p-5 md:p-6">
-                        <div className="inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-xs font-semibold tracking-wide text-blue-900 border border-blue-100 backdrop-blur">
-                          <span className="text-base">📍</span>
-                          Učebna v centru Jihlavy
-                        </div>
+                    <div className="px-6 md:px-8 pt-6 md:pt-8">
+                      <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-xs font-semibold tracking-wide text-blue-900 mb-5 border border-blue-100">
+                        <span className="text-base">📍</span>
+                        Učebna v centru Jihlavy
+                      </div>
+                      <div className="overflow-hidden rounded-2xl border border-blue-100 shadow-[0_18px_40px_rgba(15,23,42,0.14)] bg-white">
+                        <img
+                          src={location.imageSrc}
+                          alt={location.imageAlt}
+                          className="block w-full h-56 md:h-64 object-cover"
+                          loading="lazy"
+                        />
                       </div>
                     </div>
 
-                    <div className="px-6 md:px-8 pb-6 md:pb-8">
+                    <div className="px-6 md:px-8 py-6 md:py-8">
                       <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">{location.name}</h3>
                       <p className="text-gray-600 mb-4 text-sm md:text-base font-semibold">{location.address}</p>
                       <p className="text-gray-700 mb-6 text-xs md:text-sm leading-relaxed">{location.info}</p>
