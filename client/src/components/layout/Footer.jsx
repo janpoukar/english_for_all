@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-
-const NEWSLETTER_SETTINGS_KEY = "newsletterSettings";
-const NEWSLETTER_SUBSCRIBERS_KEY = "newsletterSubscribers";
+import { fetchNewsletterSettings, subscribeNewsletter } from "../../services/api";
 
 const defaultNewsletterSettings = {
   title: "Přihlaste se k Newsletteru",
@@ -16,31 +14,30 @@ export default function Footer() {
   const [newsletterEmail, setNewsletterEmail] = useState("");
 
   useEffect(() => {
-    const stored = localStorage.getItem(NEWSLETTER_SETTINGS_KEY);
-    if (!stored) return;
+    const loadSettings = async () => {
+      try {
+        const settings = await fetchNewsletterSettings();
+        setNewsletterSettings({ ...defaultNewsletterSettings, ...settings });
+      } catch {
+        setNewsletterSettings(defaultNewsletterSettings);
+      }
+    };
 
-    try {
-      const parsed = JSON.parse(stored);
-      setNewsletterSettings({ ...defaultNewsletterSettings, ...parsed });
-    } catch {
-      setNewsletterSettings(defaultNewsletterSettings);
-    }
+    loadSettings();
   }, []);
 
-  const handleNewsletterSubmit = (event) => {
+  const handleNewsletterSubmit = async (event) => {
     event.preventDefault();
     const email = newsletterEmail.trim().toLowerCase();
     if (!email) return;
 
-    const stored = localStorage.getItem(NEWSLETTER_SUBSCRIBERS_KEY);
-    const current = stored ? JSON.parse(stored) : [];
-    if (!current.includes(email)) {
-      current.push(email);
-      localStorage.setItem(NEWSLETTER_SUBSCRIBERS_KEY, JSON.stringify(current));
+    try {
+      await subscribeNewsletter(email);
+      setNewsletterEmail("");
+      alert("Děkujeme za přihlášení k newsletteru.");
+    } catch (error) {
+      alert(error.message || "Nepodařilo se přihlásit k newsletteru.");
     }
-
-    setNewsletterEmail("");
-    alert("Děkujeme za přihlášení k newsletteru.");
   };
 
   return (
@@ -159,7 +156,7 @@ export default function Footer() {
                   placeholder="Váš email"
                   value={newsletterEmail}
                   onChange={(event) => setNewsletterEmail(event.target.value)}
-                  className="flex-1 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 form-input bg-white font-medium text-sm"
+                  className="flex-1 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 form-input bg-white font-medium text-sm text-slate-900 placeholder:text-slate-500"
                   required
                 />
                 <button

@@ -4,6 +4,7 @@ const path = require('path');
 
 const authRoutes = require('./Authroutes');
 const lessonRoutes = require('./leassonRoutes');
+const newsletterRoutes = require('./newsletterRoutes');
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.get('/api/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/lessons', lessonRoutes);
+app.use('/api/newsletter', newsletterRoutes);
 
 // Serve static files from React build
 const frontendBuildPath = path.join(__dirname, '../client/dist');

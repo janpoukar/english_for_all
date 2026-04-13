@@ -432,3 +432,66 @@ export const deleteUser = async (id) => {
     throw error;
   }
 };
+
+export const fetchNewsletterSettings = async () => {
+  try {
+    const response = await fetch(`${API_BASE}/newsletter/settings`);
+    return await parseJsonResponse(response, "Nepodařilo se načíst newsletter nastavení");
+  } catch (error) {
+    console.error("Error fetching newsletter settings:", error);
+    throw error;
+  }
+};
+
+export const saveNewsletterSettings = async (settings, token) => {
+  try {
+    const response = await fetch(`${API_BASE}/newsletter/settings`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(settings),
+    });
+
+    return await parseJsonResponse(response, "Nepodařilo se uložit newsletter nastavení");
+  } catch (error) {
+    console.error("Error saving newsletter settings:", error);
+    throw error;
+  }
+};
+
+export const subscribeNewsletter = async (email) => {
+  try {
+    const response = await fetch(`${API_BASE}/newsletter/subscribe`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    return await parseJsonResponse(response, "Nepodařilo se přihlásit k newsletteru");
+  } catch (error) {
+    console.error("Error subscribing to newsletter:", error);
+    throw error;
+  }
+};
+
+export const sendNewsletterCampaign = async (campaign, token) => {
+  try {
+    const response = await fetch(`${API_BASE}/newsletter/send`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(campaign),
+    });
+
+    return await parseJsonResponse(response, "Nepodařilo se připravit newsletter k odeslání");
+  } catch (error) {
+    console.error("Error sending newsletter campaign:", error);
+    throw error;
+  }
+};

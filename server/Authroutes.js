@@ -167,4 +167,6 @@ router.get('/admin/users', verifyAdmin, async (req, res) => {
   }
 });
 
+router.verifyAdmin = verifyAdmin;
+
 module.exports = router;

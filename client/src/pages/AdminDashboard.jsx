@@ -7,7 +7,10 @@ import {
   deleteLesson,
   deleteUser,
   fetchLessons,
+  fetchNewsletterSettings,
   fetchUsers,
+  saveNewsletterSettings,
+  sendNewsletterCampaign,
   updateLesson,
   updateUser,
 } from "../services/api";
@@ -29,6 +32,11 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [lessons, setLessons] = useState([]);
   const [newsletterSettings, setNewsletterSettings] = useState(defaultNewsletterSettings);
+  const [newsletterLoading, setNewsletterLoading] = useState(false);
+  const [newsletterSaving, setNewsletterSaving] = useState(false);
+  const [newsletterMessage, setNewsletterMessage] = useState("");
+  const [newsletterCampaign, setNewsletterCampaign] = useState({ subject: "", body: "" });
+  const [newsletterSending, setNewsletterSending] = useState(false);
 
   // State pro změnu hesla
   const [selectedUserForPassword, setSelectedUserForPassword] = useState(null);
@@ -58,17 +66,22 @@ export default function AdminDashboard() {
 
     setUser(parsed);
 
-    const storedSettings = localStorage.getItem(NEWSLETTER_SETTINGS_KEY);
-    if (storedSettings) {
-      try {
-        setNewsletterSettings({ ...defaultNewsletterSettings, ...JSON.parse(storedSettings) });
-      } catch {
-        setNewsletterSettings(defaultNewsletterSettings);
-      }
-    }
-
     loadData();
+    loadNewsletterSettings();
   }, [navigate]);
+
+  const loadNewsletterSettings = async () => {
+    try {
+      setNewsletterLoading(true);
+      const settings = await fetchNewsletterSettings();
+      setNewsletterSettings({ ...defaultNewsletterSettings, ...settings });
+    } catch (err) {
+      setNewsletterSettings(defaultNewsletterSettings);
+      setNewsletterMessage(err.message || "Nepodařilo se načíst newsletter nastavení");
+    } finally {
+      setNewsletterLoading(false);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -212,9 +225,41 @@ export default function AdminDashboard() {
     }
   };
 
-  const saveNewsletterSettings = () => {
-    localStorage.setItem(NEWSLETTER_SETTINGS_KEY, JSON.stringify(newsletterSettings));
-    alert("Newsletter nastavení bylo uloženo.");
+  const handleSaveNewsletterSettings = async () => {
+    try {
+      setNewsletterSaving(true);
+      setNewsletterMessage("");
+      const token = localStorage.getItem("authToken");
+      await saveNewsletterSettings(newsletterSettings, token);
+      setNewsletterMessage("✅ Newsletter nastavení bylo uloženo.");
+      setTimeout(() => setNewsletterMessage(""), 3000);
+    } catch (err) {
+      setNewsletterMessage("❌ " + (err.message || "Nepodařilo se uložit newsletter nastavení"));
+    } finally {
+      setNewsletterSaving(false);
+    }
+  };
+
+  const handleSendNewsletter = async (event) => {
+    event.preventDefault();
+
+    if (!newsletterCampaign.subject.trim() || !newsletterCampaign.body.trim()) {
+      setNewsletterMessage("Vyplň předmět i text newsletteru");
+      return;
+    }
+
+    try {
+      setNewsletterSending(true);
+      setNewsletterMessage("");
+      const token = localStorage.getItem("authToken");
+      const result = await sendNewsletterCampaign(newsletterCampaign, token);
+      setNewsletterMessage(`✅ ${result.message}`);
+      setNewsletterCampaign({ subject: "", body: "" });
+    } catch (err) {
+      setNewsletterMessage("❌ " + (err.message || "Nepodařilo se připravit newsletter"));
+    } finally {
+      setNewsletterSending(false);
+    }
   };
 
   if (!user) return null;
@@ -262,6 +307,14 @@ export default function AdminDashboard() {
 
         <section className="bg-white rounded-xl border border-slate-200 p-4 md:p-5">
           <h2 className="text-xl font-bold text-slate-900 mb-4">Newsletter</h2>
+          {newsletterMessage && (
+            <div className={`rounded-lg p-3 mb-4 ${newsletterMessage.startsWith("✅") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+              {newsletterMessage}
+            </div>
+          )}
+
+          {newsletterLoading && <p className="text-sm text-slate-500 mb-3">Načítám newsletter nastavení...</p>}
+
           <div className="grid md:grid-cols-3 gap-3">
             <input
               className="form-input"
@@ -290,12 +343,44 @@ export default function AdminDashboard() {
           </div>
           <div className="mt-3">
             <button
-              onClick={saveNewsletterSettings}
-              className="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-semibold"
+              onClick={handleSaveNewsletterSettings}
+              disabled={newsletterSaving}
+              className="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-semibold disabled:opacity-50"
             >
-              Uložit newsletter
+              {newsletterSaving ? "Ukládám..." : "Uložit newsletter"}
             </button>
           </div>
+        </section>
+
+        <section className="bg-white rounded-xl border border-slate-200 p-4 md:p-5">
+          <h2 className="text-xl font-bold text-slate-900 mb-4">Rozeslání newsletteru</h2>
+          <form onSubmit={handleSendNewsletter} className="space-y-3">
+            <div>
+              <label className="text-sm font-semibold text-slate-700">Předmět</label>
+              <input
+                className="form-input mt-1"
+                value={newsletterCampaign.subject}
+                onChange={(event) => setNewsletterCampaign((prev) => ({ ...prev, subject: event.target.value }))}
+                placeholder="Např. Novinky z výuky angličtiny"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-slate-700">Text newsletteru</label>
+              <textarea
+                className="form-textarea mt-1 min-h-[140px] text-slate-900 placeholder:text-slate-500"
+                value={newsletterCampaign.body}
+                onChange={(event) => setNewsletterCampaign((prev) => ({ ...prev, body: event.target.value }))}
+                placeholder="Napiš text newsletteru..."
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={newsletterSending}
+              className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold disabled:opacity-50"
+            >
+              {newsletterSending ? "Připravuji..." : "Rozeslat newsletter"}
+            </button>
+          </form>
         </section>
 
         <section className="bg-white rounded-xl border border-slate-200 p-4 md:p-5">
