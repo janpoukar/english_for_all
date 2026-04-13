@@ -8,8 +8,8 @@ export default function Home() {
       imageSrc: "/pictures/doucovani.png",
       imageAlt: "Doučování",
       title: "Doučování",
-      description: "Cílené doučování pro rychlé zlepšení gramatiky, slovní zásoby i konverzace.",
-      features: ["Individuální tempo", "Praktická konverzace", "Průběžná zpětná vazba", "Online i prezenčně"]
+      description: "Cílená výuka pro domluvení se v zahraničí, v běžných situacích i na cestách.",
+      features: ["Praktické fráze", "Jistota v běžné komunikaci", "Konverzační trénink", "Důraz na používání jazyka v praxi"]
     },
     {
       imageSrc: "/pictures/graduation.png",
@@ -23,7 +23,7 @@ export default function Home() {
       imageAlt: "Příprava k FCE zkouškám",
       title: "Příprava k FCE zkouškám",
       description: "Komplexní trénink na Cambridge B2 First (FCE) včetně všech částí zkoušky.",
-      features: ["Reading, Writing, Listening, Speaking", "Autentické testové úlohy", "Tipy ke každé části", "Jistota před zkouškou"]
+      features: ["Reading, Writing, Listening, Speaking", "Autentické testové úlohy", "Tipy ke každé části", "Postupná příprava na zkoušku"]
     }
   ];
 
@@ -164,15 +164,15 @@ export default function Home() {
                 <div className="flex gap-4 hover-lift p-6 rounded-xl transition bg-white/50 border border-red-100 shadow-soft hover:shadow-medium">
                   <span className="text-3xl md:text-4xl flex-shrink-0 glow-pulse">👨‍🎓</span>
                   <div className="min-w-0">
-                    <h3 className="font-bold text-base md:text-lg text-gray-900">Kvalitní tutory</h3>
-                    <p className="text-sm md:text-base text-gray-600">Všichni jsou certifikovaní s bohatými zkušenostmi</p>
+                    <h3 className="font-bold text-base md:text-lg text-gray-900">Dlouholeté zkušenosti</h3>
+                    <p className="text-sm md:text-base text-gray-600">Opíráme se o praxi, která pomáhá studentům růst s jistotou</p>
                   </div>
                 </div>
                 <div className="flex gap-4 hover-lift p-6 rounded-xl transition bg-white/50 border border-blue-100 shadow-soft hover:shadow-medium">
                   <span className="text-3xl md:text-4xl flex-shrink-0 glow-pulse">💰</span>
                   <div className="min-w-0">
                     <h3 className="font-bold text-base md:text-lg text-gray-900">Konkurenční ceny</h3>
-                    <p className="text-sm md:text-base text-gray-600">Nejlepší poměr ceny a kvality v Praze</p>
+                    <p className="text-sm md:text-base text-gray-600">Nejlepší poměr ceny a kvality pro každého studenta</p>
                   </div>
                 </div>
                 <div className="flex gap-4 hover-lift p-6 rounded-xl transition bg-white/50 border border-red-100 shadow-soft hover:shadow-medium">
@@ -239,7 +239,7 @@ export default function Home() {
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent p-5 md:p-6">
                         <div className="inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-xs font-semibold tracking-wide text-blue-900 border border-blue-100 backdrop-blur">
                           <span className="text-base">📍</span>
-                          Klidné místo pro výuku
+                          Učebna v centru Jihlavy
                         </div>
                       </div>
                     </div>
