@@ -82,10 +82,10 @@ export default function Gallery() {
           <h2 className="text-4xl font-bold text-gray-800 mb-12 text-center">Naše Prostory</h2>
           <div className="grid md:grid-cols-4 gap-8">
             {[
-              { icon: "🏫", title: "2 Lokace", desc: "V centru Prahy" },
-              { icon: "👨‍🏫", title: "15+ Lektorů", desc: "Certifikovaní rodilí mluvčí" },
-              { icon: "📚", title: "5 Učeben", desc: "Moderně vybavené prostory" },
-              { icon: "💻", title: "Online", desc: "Flexibilní výuka odkudkoliv" }
+              { icon: "🏫", title: "Učebna v centru města Jihlavy", desc: "Pohodlná dostupnost a příjemné prostředí" },
+              { icon: "👨‍🏫", title: "Zkušená lektorka", desc: "Dlouholetá praxe ve výuce angličtiny" },
+              { icon: "📚", title: "Vybavená učebna pro výuku", desc: "Moderní zázemí pro efektivní lekce" },
+              { icon: "🎯", title: "Příprava na různé zkoušky", desc: "FCE, IELTS a další jazykové zkoušky" }
             ].map((item, idx) => (
               <div key={idx} className="text-center animate-fade-in-up" style={{ animationDelay: `${idx * 0.1}s` }}>
                 <div className="text-5xl mb-4">{item.icon}</div>
