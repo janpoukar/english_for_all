@@ -212,36 +212,37 @@ export default function Home() {
       <section className="py-20 md:py-32 bg-gradient-to-b from-white via-red-50 to-white relative">
         <div className="absolute top-1/2 left-0 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-15"></div>
         <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
-          <div className="text-center mb-16 md:mb-20 animate-fade-in-up">
-            <span className="badge badge-primary mb-4 inline-block text-xs md:text-sm px-4 py-2">Naše lokalita</span>
+          <div className="text-center mb-14 md:mb-18 animate-fade-in-up">
+            <h2 className="text-5xl md:text-6xl font-black text-gray-900 tracking-tight">Naše lokalita</h2>
+            <div className="mx-auto mt-5 h-1.5 w-28 rounded-full bg-gradient-to-r from-blue-700 via-blue-500 to-red-600"></div>
           </div>
 
-          <div className="grid md:grid-cols-1 gap-6 md:gap-8 max-w-xl mx-auto">
+          <div className="grid md:grid-cols-1 gap-6 md:gap-8 max-w-3xl mx-auto">
             {locations.map((location, idx) => (
               <div key={idx} className="animate-fade-in-up" style={{ animationDelay: `${idx * 0.15}s` }}>
-                <div className="group relative h-full overflow-hidden rounded-[34px] border border-blue-100/80 bg-white/95 shadow-[0_20px_60px_rgba(0,71,171,0.12)] transition-all duration-500 transform-gpu will-change-transform hover:-translate-y-2 hover:shadow-[0_30px_80px_rgba(0,71,171,0.18)]">
+                <div className="group relative h-full overflow-hidden rounded-[34px] border border-blue-100/80 bg-white/95 shadow-[0_24px_70px_rgba(0,71,171,0.14)] transition-all duration-500 transform-gpu will-change-transform hover:-translate-y-2 hover:shadow-[0_34px_90px_rgba(0,71,171,0.2)]">
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-red-50 opacity-95"></div>
                   <div className="absolute -top-16 right-0 h-40 w-40 rounded-full bg-blue-200/25 blur-3xl"></div>
                   <div className="absolute -bottom-12 -left-10 h-32 w-32 rounded-full bg-red-200/20 blur-3xl"></div>
                   <div className="absolute inset-0 rounded-[34px] ring-1 ring-inset ring-white/60 pointer-events-none"></div>
 
                   <div className="relative z-10">
-                    <div className="px-6 md:px-8 pt-6 md:pt-8">
+                    <div className="px-6 md:px-10 pt-6 md:pt-10">
                       <img
                         src={location.imageSrc}
                         alt={location.imageAlt}
-                        className="block w-full h-56 md:h-64 object-cover rounded-2xl"
+                        className="block w-full h-64 md:h-80 object-cover rounded-2xl"
                         loading="lazy"
                       />
                     </div>
 
-                    <div className="px-6 md:px-8 py-6 md:py-8">
-                      <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">{location.name}</h3>
-                      <p className="text-gray-600 mb-4 text-sm md:text-base font-semibold">{location.address}</p>
-                      <p className="text-gray-700 mb-6 text-xs md:text-sm leading-relaxed">{location.info}</p>
+                    <div className="px-6 md:px-10 py-6 md:py-8">
+                      <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{location.name}</h3>
+                      <p className="text-gray-600 mb-4 text-base md:text-lg font-semibold">{location.address}</p>
+                      <p className="text-gray-700 mb-6 text-sm md:text-base leading-relaxed">{location.info}</p>
                       <div className="grid gap-2 border-t border-blue-100 pt-4 md:pt-6">
                         {location.features.map((feature, i) => (
-                          <div key={i} className="flex items-center gap-3 text-xs md:text-sm text-gray-700 rounded-xl bg-white/70 px-4 py-3 border border-blue-100/70">
+                          <div key={i} className="flex items-center gap-3 text-sm md:text-base text-gray-700 rounded-xl bg-white/70 px-4 py-3 border border-blue-100/70">
                             <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 text-white text-[10px] font-bold flex-shrink-0 shadow-sm">
                               ✓
                             </span>
