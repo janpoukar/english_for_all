@@ -1,4 +1,4 @@
-export default function ServiceCard({ icon, title, description, features }) {
+export default function ServiceCard({ icon, imageSrc, imageAlt, title, description, features }) {
   return (
     <div className="group bg-white rounded-16 overflow-hidden shadow-medium hover:shadow-hard transition-all duration-500 hover:-translate-y-6 border border-gray-100 hover:border-blue-200 animate-fade-in-up relative">
       {/* Top gradient accent */}
@@ -6,9 +6,15 @@ export default function ServiceCard({ icon, title, description, features }) {
       
       <div className="p-8">
         <div className="flex items-start justify-between mb-6">
-          <div className="text-6xl p-4 bg-gradient-to-br from-blue-100 to-red-100 rounded-2xl shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all duration-300 group-hover:from-blue-200 group-hover:to-red-200">
-            {icon}
-          </div>
+          {imageSrc ? (
+            <div className="w-20 h-20 md:w-24 md:h-24 p-2 bg-gradient-to-br from-blue-100 to-red-100 rounded-2xl shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all duration-300 group-hover:from-blue-200 group-hover:to-red-200 overflow-hidden flex items-center justify-center">
+              <img src={imageSrc} alt={imageAlt || title} className="w-full h-full object-contain" loading="lazy" />
+            </div>
+          ) : (
+            <div className="text-6xl p-4 bg-gradient-to-br from-blue-100 to-red-100 rounded-2xl shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all duration-300 group-hover:from-blue-200 group-hover:to-red-200">
+              {icon}
+            </div>
+          )}
           <div className="text-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300">→</div>
         </div>
         

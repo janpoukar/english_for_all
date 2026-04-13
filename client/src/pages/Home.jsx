@@ -5,19 +5,22 @@ import WavingFlag from "../components/WavingFlag";
 export default function Home() {
   const services = [
     {
-      icon: "👨‍🏫",
+      imageSrc: "/pictures/doucovani.png",
+      imageAlt: "Doučování",
       title: "Doučování",
       description: "Cílené doučování pro rychlé zlepšení gramatiky, slovní zásoby i konverzace.",
       features: ["Individuální tempo", "Praktická konverzace", "Průběžná zpětná vazba", "Online i prezenčně"]
     },
     {
-      icon: "🎓",
+      imageSrc: "/pictures/graduation.png",
+      imageAlt: "Příprava k maturitě",
       title: "Příprava k maturitě",
       description: "Systematická příprava na písemnou i ústní část maturitní zkoušky z angličtiny.",
       features: ["Modelové testy", "Maturitní témata", "Nácvik ústní části", "Strategie pro lepší výsledek"]
     },
     {
-      icon: "🎯",
+      imageSrc: "/pictures/fce.png",
+      imageAlt: "Příprava k FCE zkouškám",
       title: "Příprava k FCE zkouškám",
       description: "Komplexní trénink na Cambridge B2 First (FCE) včetně všech částí zkoušky.",
       features: ["Reading, Writing, Listening, Speaking", "Autentické testové úlohy", "Tipy ke každé části", "Jistota před zkouškou"]

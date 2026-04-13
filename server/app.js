@@ -20,6 +20,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/lessons', lessonRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 
+// Serve shared image assets from the repository root
+app.use('/pictures', express.static(path.join(__dirname, '../pictures')));
+
 // Serve static files from React build
 const frontendBuildPath = path.join(__dirname, '../client/dist');
 app.use(express.static(frontendBuildPath));
