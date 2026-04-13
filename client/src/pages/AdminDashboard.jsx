@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  adminChangePassword,
   createLesson,
   createUser,
   deleteLesson,
@@ -172,34 +173,14 @@ export default function AdminDashboard() {
 
     try {
       const token = localStorage.getItem("authToken");
-      
+ 
       if (!token) {
         setPasswordMessage("❌ Jste odhlášeni. Přihlaste se znovu.");
         setPasswordChanging(false);
         return;
       }
 
-      console.log("Odesílám request se user ID:", selectedUserForPassword);
-      
-      const response = await fetch("/api/auth/admin/change-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          userId: selectedUserForPassword,
-          newPassword,
-        }),
-      });
-
-      const data = await response.json();
-      console.log("Response status:", response.status, "Data:", data);
-
-      if (!response.ok) {
-        setPasswordMessage("❌ " + (data.error || "Chyba: " + response.status));
-        return;
-      }
+      await adminChangePassword(selectedUserForPassword, newPassword, token);
 
       setPasswordMessage("✅ Heslo bylo změněno!");
       setNewPassword("");

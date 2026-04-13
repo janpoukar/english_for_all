@@ -367,6 +367,60 @@ export const updateUser = async (id, updates) => {
   }
 };
 
+export const adminChangePassword = async (userId, newPassword, token) => {
+  if (!userId || !newPassword) {
+    throw new Error("Vyber uživatele a vlož heslo");
+  }
+
+  if (newPassword.length < 6) {
+    throw new Error("Heslo musí mít alespoň 6 znaků");
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/auth/admin/change-password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ userId, newPassword }),
+    });
+
+    const data = await response.json().catch(() => null);
+    if (response.ok) {
+      return data || { success: true };
+    }
+
+    const message = data?.error || data?.message || `Chyba: ${response.status}`;
+    const fallbackAllowed = /connect|enetunreach|econnrefused|timeout|failed to fetch|network|spoj/i.test(message);
+
+    if (!fallbackAllowed) {
+      throw new Error(message);
+    }
+  } catch (error) {
+    const rawMessage = String(error?.message || "").toLowerCase();
+    const fallbackAllowed = /connect|enetunreach|econnrefused|timeout|failed to fetch|network|spoj/.test(rawMessage);
+
+    if (!fallbackAllowed) {
+      throw error;
+    }
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await supabaseFetch(`/users?id=eq.${userId}`, {
+      method: "PATCH",
+      headers: {
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify({ password_hash: hashedPassword }),
+    });
+    return { success: true, message: "Heslo bylo změněno (fallback)" };
+  } catch (fallbackError) {
+    throw new Error(fallbackError?.message || "Chyba při změně hesla");
+  }
+};
+
 export const deleteUser = async (id) => {
   try {
     await supabaseFetch(`/users?id=eq.${id}`, {

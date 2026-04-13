@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import { adminChangePassword } from "../services/api";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -65,24 +66,7 @@ export default function AdminPanel() {
 
     try {
       const token = localStorage.getItem("authToken");
-      const response = await fetch(`${API_BASE}/auth/admin/change-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          userId: selectedUserId,
-          newPassword,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error);
-        return;
-      }
+      await adminChangePassword(selectedUserId, newPassword, token);
 
       setSuccess("Heslo bylo změněno!");
       setNewPassword("");
