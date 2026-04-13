@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_ORIGIN = API_BASE.replace(/\/api\/?$/, "");
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || "admin@english.local";
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || "admin123";
 const DEMO_STUDENT_EMAIL = import.meta.env.VITE_DEMO_STUDENT_EMAIL || "student@demo.cz";
@@ -152,27 +153,42 @@ export const fetchTutors = async () => {
 // Materials from Supabase
 export const fetchMaterials = async (lessonId) => {
   try {
-    return await supabaseFetch(`/materials?lesson_id=eq.${lessonId}`);
+    const response = await fetch(`${API_BASE}/materials?lesson_id=${encodeURIComponent(lessonId)}`);
+    return await parseJsonResponse(response, "Nepodařilo se načíst materiály");
   } catch (error) {
     console.error("Error fetching materials:", error);
     throw error;
   }
 };
 
-export const uploadMaterial = async (materialData) => {
+export const uploadMaterial = async ({ lessonId, file }) => {
   try {
-    const result = await supabaseFetch("/materials", {
+    const formData = new FormData();
+    formData.append("lesson_id", lessonId);
+    formData.append("file", file);
+
+    const response = await fetch(`${API_BASE}/materials`, {
       method: "POST",
-      headers: {
-        "Prefer": "return=representation"
-      },
-      body: JSON.stringify(materialData)
+      body: formData,
     });
-    return Array.isArray(result) ? result[0] : result;
+
+    return await parseJsonResponse(response, "Nepodařilo se uložit materiál");
   } catch (error) {
     console.error("Error uploading material:", error);
     throw error;
   }
+};
+
+export const resolveFileUrl = (fileUrl) => {
+  if (!fileUrl) return "";
+  if (/^https?:\/\//i.test(fileUrl)) return fileUrl;
+  if (fileUrl.startsWith("/")) return `${API_ORIGIN}${fileUrl}`;
+  return `${API_ORIGIN}/${fileUrl.replace(/^\/+/, "")}`;
+};
+
+export const getMaterialDownloadUrl = (materialId) => {
+  if (!materialId) return "";
+  return `${API_BASE}/materials/${encodeURIComponent(materialId)}/download`;
 };
 
 // Assignments from Supabase

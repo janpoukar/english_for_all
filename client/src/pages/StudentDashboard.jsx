@@ -1,7 +1,25 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Card from "../components/ui/Card";
-import { fetchAssignments, fetchLessons, fetchMaterials } from "../services/api";
+import {
+  fetchAssignments,
+  fetchLessons,
+  fetchMaterials,
+  getMaterialDownloadUrl,
+  resolveFileUrl,
+} from "../services/api";
+
+const STUDENTS_META_PREFIX = "##students::";
+
+const splitLessonDescription = (rawDescription) => {
+  const source = rawDescription || "";
+  const markerIndex = source.indexOf(STUDENTS_META_PREFIX);
+  if (markerIndex === -1) {
+    return { cleanDescription: source };
+  }
+
+  return { cleanDescription: source.slice(0, markerIndex).trim() };
+};
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -53,6 +71,8 @@ export default function StudentDashboard() {
     navigate("/");
   };
 
+  const getCleanLessonDescription = (lesson) => splitLessonDescription(lesson?.description).cleanDescription;
+
   useEffect(() => {
     const loadLessonResources = async () => {
       if (!selectedLesson?.id) {
@@ -80,12 +100,18 @@ export default function StudentDashboard() {
     loadLessonResources();
   }, [selectedLesson]);
 
-  const upcomingLessons = lessons.filter(
-    lesson => new Date(lesson.date) >= new Date()
-  );
-  const completedLessons = lessons.filter(
-    lesson => lesson.status === "completed"
-  );
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const upcomingLessons = lessons.filter((lesson) => {
+    const lessonDate = new Date(lesson.date);
+    return lessonDate >= todayStart && lesson.status !== "completed";
+  });
+
+  const completedLessons = lessons.filter((lesson) => {
+    const lessonDate = new Date(lesson.date);
+    return lesson.status === "completed" || lessonDate < todayStart;
+  });
 
   if (loading) {
     return (
@@ -160,8 +186,8 @@ export default function StudentDashboard() {
                     <span className="text-3xl">📚</span>
                   </div>
 
-                  {lesson.description && (
-                    <p className="text-gray-600 text-sm mb-4">{lesson.description}</p>
+                  {getCleanLessonDescription(lesson) && (
+                    <p className="text-gray-600 text-sm mb-4">{getCleanLessonDescription(lesson)}</p>
                   )}
 
                   <div className="space-y-2 pt-4 border-t border-blue-200">
@@ -207,7 +233,7 @@ export default function StudentDashboard() {
           <div>
             <div className="flex items-center gap-2 mb-6">
               <span className="text-3xl">✅</span>
-              <h2 className="text-2xl font-bold text-gray-900">Absolvované lekce</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Proběhlé lekce</h2>
               <span className="ml-auto bg-green-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
                 {completedLessons.length}
               </span>
@@ -215,14 +241,32 @@ export default function StudentDashboard() {
 
             <div className="grid md:grid-cols-2 gap-6">
               {completedLessons.map(lesson => (
-                <Card key={lesson.id} className="opacity-75">
+                <Card
+                  key={lesson.id}
+                  className="opacity-85 cursor-pointer"
+                  onClick={() => setSelectedLesson(lesson)}
+                >
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="font-bold text-gray-700">{lesson.title}</h3>
                     <span className="text-2xl">✓</span>
                   </div>
+                  {getCleanLessonDescription(lesson) && (
+                    <p className="text-gray-600 text-sm mb-3">{getCleanLessonDescription(lesson)}</p>
+                  )}
                   <p className="text-sm text-gray-500">
                     {new Date(lesson.date).toLocaleDateString('cs-CZ')}
                   </p>
+                  <div className="mt-4">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedLesson(lesson);
+                      }}
+                      className="w-full btn-secondary text-sm py-2"
+                    >
+                      ℹ️ Detaily a materiály
+                    </button>
+                  </div>
                 </Card>
               ))}
             </div>
@@ -247,7 +291,7 @@ export default function StudentDashboard() {
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h2 className="text-3xl font-bold text-gray-900">{selectedLesson.title}</h2>
-                <p className="text-gray-600 mt-1">{selectedLesson.description}</p>
+                <p className="text-gray-600 mt-1">{getCleanLessonDescription(selectedLesson)}</p>
               </div>
               <button
                 onClick={() => setSelectedLesson(null)}
@@ -291,8 +335,9 @@ export default function StudentDashboard() {
               ) : (
                 <div className="space-y-2">
                   {lessonMaterials.map((material) => {
-                    const url = material.file_url || "";
+                    const url = resolveFileUrl(material.file_url || "");
                     const external = /^https?:\/\//i.test(url);
+                    const downloadUrl = getMaterialDownloadUrl(material.id);
                     return (
                       <div key={material.id} className="bg-blue-50 p-3 rounded-lg border border-blue-200 flex items-center justify-between gap-3">
                         <div>
@@ -303,18 +348,28 @@ export default function StudentDashboard() {
                             </p>
                           )}
                         </div>
-                        {external ? (
-                          <a
-                            href={url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="btn-secondary text-sm px-3 py-1.5 whitespace-nowrap"
-                          >
-                            Otevřít
-                          </a>
-                        ) : (
-                          <span className="text-xs text-gray-500">Soubor uložen</span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {external ? (
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="btn-secondary text-sm px-3 py-1.5 whitespace-nowrap"
+                            >
+                              Otevřít
+                            </a>
+                          ) : (
+                            <span className="text-xs text-gray-500">Soubor uložen</span>
+                          )}
+                          {downloadUrl && (
+                            <a
+                              href={downloadUrl}
+                              className="btn-primary text-sm px-3 py-1.5 whitespace-nowrap"
+                            >
+                              Stáhnout
+                            </a>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
