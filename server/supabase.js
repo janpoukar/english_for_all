@@ -173,8 +173,17 @@ const supabaseFetch = async (endpoint, options = {}) => {
   }
 
   let lastError = null;
+  const attemptedHosts = [];
 
   for (const baseUrl of SUPABASE_URL_OPTIONS) {
+    const host = (() => {
+      try {
+        return new URL(baseUrl).hostname;
+      } catch {
+        return 'unknown';
+      }
+    })();
+    attemptedHosts.push(host);
     const url = `${baseUrl}/rest/v1${endpoint}`;
     const headers = {
       apikey: SUPABASE_KEY,
@@ -206,7 +215,12 @@ const supabaseFetch = async (endpoint, options = {}) => {
     }
   }
 
-  throw lastError || new Error('Nepodařilo se spojit se Supabase');
+  const cause = lastError?.cause;
+  const causeDetails = cause
+    ? ` cause=${cause.code || cause.name || 'unknown'}${cause.hostname ? ` host=${cause.hostname}` : ''}${cause.address ? ` address=${cause.address}` : ''}`
+    : '';
+  const endpointDetails = `endpoint=${endpoint} hosts=${attemptedHosts.join(',')}`;
+  throw new Error(`${lastError?.message || 'Nepodařilo se spojit se Supabase'} (${endpointDetails}${causeDetails})`);
 };
 
 module.exports = { supabaseFetch, getSupabaseDiagnostics };
