@@ -62,6 +62,8 @@ export default function AdminDashboard() {
   const [newsletterSending, setNewsletterSending] = useState(false);
   const [newsletterCampaigns, setNewsletterCampaigns] = useState([]);
   const [campaignsLoading, setCampaignsLoading] = useState(false);
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
+  const [selectedLessonIds, setSelectedLessonIds] = useState([]);
 
   // State pro změnu hesla
   const [selectedUserForPassword, setSelectedUserForPassword] = useState(null);
@@ -114,8 +116,12 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       const [usersData, lessonsData] = await Promise.all([fetchUsers(), fetchLessons()]);
-      setUsers(Array.isArray(usersData) ? usersData : []);
-      setLessons(Array.isArray(lessonsData) ? lessonsData : []);
+      const normalizedUsers = Array.isArray(usersData) ? usersData : [];
+      const normalizedLessons = Array.isArray(lessonsData) ? lessonsData : [];
+      setUsers(normalizedUsers);
+      setLessons(normalizedLessons);
+      setSelectedUserIds((prev) => prev.filter((id) => normalizedUsers.some((item) => item.id === id)));
+      setSelectedLessonIds((prev) => prev.filter((id) => normalizedLessons.some((item) => item.id === id)));
       setError("");
     } catch (err) {
       setError(err.message || "Nepodařilo se načíst data");
@@ -193,8 +199,44 @@ export default function AdminDashboard() {
     try {
       await deleteUser(id);
       await loadData();
+      setSelectedUserIds((prev) => prev.filter((selectedId) => selectedId !== id));
     } catch (err) {
       alert("Nepodařilo se smazat uživatele: " + (err.message || "chyba"));
+    }
+  };
+
+  const toggleUserSelection = (id, checked) => {
+    setSelectedUserIds((prev) => {
+      if (checked) {
+        return prev.includes(id) ? prev : [...prev, id];
+      }
+      return prev.filter((item) => item !== id);
+    });
+  };
+
+  const handleSelectAllUsers = (checked) => {
+    if (!checked) {
+      setSelectedUserIds([]);
+      return;
+    }
+    setSelectedUserIds(users.map((item) => item.id));
+  };
+
+  const handleDeleteSelectedUsers = async () => {
+    if (!selectedUserIds.length) return;
+    if (!window.confirm(`Opravdu smazat ${selectedUserIds.length} vybraných uživatelů?`)) return;
+
+    try {
+      const results = await Promise.allSettled(selectedUserIds.map((id) => deleteUser(id)));
+      const failed = results.filter((result) => result.status === "rejected");
+      await loadData();
+      setSelectedUserIds([]);
+
+      if (failed.length) {
+        alert(`Smazáno s chybami: ${failed.length} z ${selectedUserIds.length} uživatelů se nepodařilo smazat.`);
+      }
+    } catch (err) {
+      alert("Nepodařilo se smazat vybrané uživatele: " + (err.message || "chyba"));
     }
   };
 
@@ -221,8 +263,44 @@ export default function AdminDashboard() {
     try {
       await deleteLesson(id);
       await loadData();
+      setSelectedLessonIds((prev) => prev.filter((selectedId) => selectedId !== id));
     } catch (err) {
       alert("Nepodařilo se smazat lekci: " + (err.message || "chyba"));
+    }
+  };
+
+  const toggleLessonSelection = (id, checked) => {
+    setSelectedLessonIds((prev) => {
+      if (checked) {
+        return prev.includes(id) ? prev : [...prev, id];
+      }
+      return prev.filter((item) => item !== id);
+    });
+  };
+
+  const handleSelectAllLessons = (checked) => {
+    if (!checked) {
+      setSelectedLessonIds([]);
+      return;
+    }
+    setSelectedLessonIds(sortedLessons.map((item) => item.id));
+  };
+
+  const handleDeleteSelectedLessons = async () => {
+    if (!selectedLessonIds.length) return;
+    if (!window.confirm(`Opravdu smazat ${selectedLessonIds.length} vybraných lekcí?`)) return;
+
+    try {
+      const results = await Promise.allSettled(selectedLessonIds.map((id) => deleteLesson(id)));
+      const failed = results.filter((result) => result.status === "rejected");
+      await loadData();
+      setSelectedLessonIds([]);
+
+      if (failed.length) {
+        alert(`Smazáno s chybami: ${failed.length} z ${selectedLessonIds.length} lekcí se nepodařilo smazat.`);
+      }
+    } catch (err) {
+      alert("Nepodařilo se smazat vybrané lekce: " + (err.message || "chyba"));
     }
   };
 
@@ -701,17 +779,34 @@ export default function AdminDashboard() {
         <section className="bg-white rounded-xl border border-slate-200 p-4 md:p-5">
           <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
             <h2 className="text-xl font-bold text-slate-900">Hodiny</h2>
-            <button
-              onClick={handleCreateQuickLesson}
-              className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
-            >
-              + Rychlá lekce
-            </button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={handleDeleteSelectedLessons}
+                disabled={!selectedLessonIds.length}
+                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Smazat vybrané ({selectedLessonIds.length})
+              </button>
+              <button
+                onClick={handleCreateQuickLesson}
+                className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+              >
+                + Rychlá lekce
+              </button>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-slate-500 border-b">
+                  <th className="py-2 pr-3 w-10">
+                    <input
+                      type="checkbox"
+                      checked={sortedLessons.length > 0 && selectedLessonIds.length === sortedLessons.length}
+                      onChange={(event) => handleSelectAllLessons(event.target.checked)}
+                      aria-label="Vybrat všechny lekce"
+                    />
+                  </th>
                   <th className="py-2">Název</th>
                   <th className="py-2">Datum</th>
                   <th className="py-2">Čas</th>
@@ -722,6 +817,14 @@ export default function AdminDashboard() {
               <tbody>
                 {sortedLessons.map((lesson) => (
                   <tr key={lesson.id} className="border-b last:border-0">
+                    <td className="py-2 pr-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedLessonIds.includes(lesson.id)}
+                        onChange={(event) => toggleLessonSelection(lesson.id, event.target.checked)}
+                        aria-label={`Vybrat lekci ${lesson.title}`}
+                      />
+                    </td>
                     <td className="py-2 pr-3 font-semibold text-slate-800">{lesson.title}</td>
                     <td className="py-2 pr-3">{lesson.date}</td>
                     <td className="py-2 pr-3">{(lesson.start_time || "").substring(0, 5)} - {(lesson.end_time || "").substring(0, 5)}</td>
@@ -752,7 +855,16 @@ export default function AdminDashboard() {
         </section>
 
         <section className="bg-white rounded-xl border border-slate-200 p-4 md:p-5">
-          <h2 className="text-xl font-bold text-slate-900 mb-4">Uživatelé</h2>
+          <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+            <h2 className="text-xl font-bold text-slate-900">Uživatelé</h2>
+            <button
+              onClick={handleDeleteSelectedUsers}
+              disabled={!selectedUserIds.length}
+              className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Smazat vybrané ({selectedUserIds.length})
+            </button>
+          </div>
 
           <div className="grid md:grid-cols-4 gap-3 mb-4">
             <input
@@ -788,6 +900,14 @@ export default function AdminDashboard() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-slate-500 border-b">
+                  <th className="py-2 pr-3 w-10">
+                    <input
+                      type="checkbox"
+                      checked={users.length > 0 && selectedUserIds.length === users.length}
+                      onChange={(event) => handleSelectAllUsers(event.target.checked)}
+                      aria-label="Vybrat všechny uživatele"
+                    />
+                  </th>
                   <th className="py-2">Jméno</th>
                   <th className="py-2">Email</th>
                   <th className="py-2">Role</th>
@@ -797,6 +917,14 @@ export default function AdminDashboard() {
               <tbody>
                 {users.map((item) => (
                   <tr key={item.id} className="border-b last:border-0">
+                    <td className="py-2 pr-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedUserIds.includes(item.id)}
+                        onChange={(event) => toggleUserSelection(item.id, event.target.checked)}
+                        aria-label={`Vybrat uživatele ${item.name}`}
+                      />
+                    </td>
                     <td className="py-2 pr-3 font-semibold text-slate-800">{item.name}</td>
                     <td className="py-2 pr-3">{item.email}</td>
                     <td className="py-2 pr-3">
