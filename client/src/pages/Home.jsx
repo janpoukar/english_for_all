@@ -53,7 +53,7 @@ export default function Home() {
             <div className="animate-slide-in-left">
               <div className="mb-8 inline-block">
                 <span className="bg-white/20 glass-effect px-6 py-3 rounded-full text-white text-sm font-semibold">
-                  ✨ Nový způsob učení angličtiny
+                  ✨ Efektivní způsob učení angličtiny
                 </span>
               </div>
               
