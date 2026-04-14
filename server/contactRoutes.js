@@ -53,7 +53,27 @@ const createTransport = (smtpConfig = {}) => {
     auth: { user, pass },
     connectionTimeout: 10000,
     socketTimeout: 10000,
+    greetingTimeout: 10000,
   });
+};
+
+const sendEmailWithRetry = async (transport, mailOptions, maxRetries = 3) => {
+  let lastError;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Sending email attempt ${attempt}/${maxRetries}`);
+      const info = await transport.sendMail(mailOptions);
+      console.log(`Contact form email sent: ${info.response}`);
+      return info;
+    } catch (err) {
+      lastError = err;
+      console.error(`Email send attempt ${attempt} failed:`, err.message);
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+      }
+    }
+  }
+  throw lastError;
 };
 
 router.post('/', async (req, res) => {
@@ -91,7 +111,7 @@ router.post('/', async (req, res) => {
           </div>
         `;
 
-        await transport.sendMail({
+        await sendEmailWithRetry(transport, {
           from: smtpSettings.from || smtpSettings.user,
           to: contactEmail,
           replyTo: email,
@@ -101,7 +121,7 @@ router.post('/', async (req, res) => {
 
         console.log(`Contact form email sent successfully`);
       } catch (err) {
-        console.error('Background email send failed:', err.message);
+        console.error('Background email send failed after retries:', err.message);
       }
     });
 
