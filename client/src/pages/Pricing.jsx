@@ -103,9 +103,9 @@ export default function Pricing() {
                   <h3 className="text-2xl md:text-3xl font-black text-gray-900 mb-2">{plan.name}</h3>
                   <p className="text-gray-600 text-sm md:text-base mb-8 max-w-xl mx-auto">{plan.description}</p>
 
-                  <div className="mb-8 flex items-end justify-center gap-2 whitespace-nowrap max-w-full">
-                    <span className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black text-gray-900 leading-none">{plan.price} Kč</span>
-                    <span className="text-sm sm:text-base lg:text-lg text-gray-600 leading-none">/ {plan.period}</span>
+                  <div className="mb-10">
+                    <div className="text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 leading-tight">{plan.price}</div>
+                    <div className="text-base md:text-lg text-gray-600 font-semibold mt-2">Kč / {plan.period}</div>
                   </div>
 
                   <Link
