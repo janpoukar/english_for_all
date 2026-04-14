@@ -72,6 +72,7 @@ const poolConfig = connectionString
     };
 
 if (useSsl) {
+  process.env.PGSSLMODE = process.env.PGSSLMODE || 'no-verify';
   poolConfig.ssl = {
     rejectUnauthorized: false,
   };
