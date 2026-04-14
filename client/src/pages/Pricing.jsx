@@ -5,8 +5,8 @@ export default function Pricing() {
     {
       name: "Individuální lekce",
       price: "400",
-      period: "hodina",
-      description: "Přesně pro tebe. Bez rozptylování v přítomnosti ostatních.",
+      period: "hodinu",
+      description: "Přesně pro Vás. Bez rozptylování v přítomnosti ostatních.",
       icon: "👤",
       color: "from-blue-50 via-white to-blue-50",
       borderColor: "border-blue-200",
@@ -19,21 +19,21 @@ export default function Pricing() {
     {
       name: "Skupinová lekce",
       price: "500",
-      period: "hodina",
+      period: "hodinu",
       description: "Pro skupinu až do 3 lidí. Zábavnější edukace se spolužáky.",
       icon: "👥",
       color: "from-red-50 via-white to-red-50",
       borderColor: "border-red-200",
       features: [
         "Cena za 60 minut výuky",
-        "Skupinový kurz (až 3 lidé)",
+        "Skupinový kurz (až 3 osoby)",
         "Časový slot dle skupiny",
       ],
     },
     {
       name: "Doučování ve firmách",
-      price: "od 600+",
-      period: "hodina",
+      price: "od 600",
+      period: "hodinu",
       description: "Firemní výuka přímo u vás na pracovišti. Obsah na míru podle oboru a týmu.",
       icon: "🏢",
       color: "from-amber-50 via-white to-orange-50",
@@ -41,7 +41,7 @@ export default function Pricing() {
       features: [
         "Cena od 600 Kč za 60 minut",
         "Program pro týmy a oddělení",
-        "Business English, meetingy, prezentace",
+        "Business English, meetingy a prezentace",
       ],
     },
   ];
@@ -53,7 +53,7 @@ export default function Pricing() {
     },
     {
       q: "Jaká je cena skupinové lekce?",
-      a: "Skupinová lekce (až 3 lidé) stojí 500 Kč za hodinu.",
+      a: "Skupinová lekce (až 3 osoby) stojí 500 Kč za hodinu.",
     },
     {
       q: "Lze si domluvit čas lekce?",
@@ -118,7 +118,7 @@ export default function Pricing() {
                   <ul className="space-y-3 text-left max-w-md mx-auto">
                     {plan.features.map((feature, fidx) => (
                       <li key={fidx} className="flex items-start gap-3 text-gray-800">
-                        <span className="text-green-600 font-bold text-lg mt-0.5">✓</span>
+                        <span className="text-green-600 font-bold text-lg mt-0.5">✓ </span>
                         <span className="text-sm md:text-base">{feature}</span>
                       </li>
                     ))}
