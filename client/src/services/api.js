@@ -250,11 +250,22 @@ export const getMaterialDownloadUrl = (materialId) => {
   return `${API_BASE}/materials/${encodeURIComponent(materialId)}/download`;
 };
 
+const normalizeAssignment = (assignment) => {
+  if (!assignment || typeof assignment !== "object") return assignment;
+
+  return {
+    ...assignment,
+    id: assignment.id || assignment.assignment_id || assignment.task_id || null,
+    status: (assignment.status || "probiha").toLowerCase(),
+  };
+};
+
 // Assignments from Supabase
 export const fetchAssignments = async (lessonId) => {
   try {
     const response = await fetch(`${API_BASE}/assignments?lesson_id=${encodeURIComponent(lessonId)}`);
-    return await parseJsonResponse(response, "Nepodařilo se načíst úkoly");
+    const data = await parseJsonResponse(response, "Nepodařilo se načíst úkoly");
+    return Array.isArray(data) ? data.map(normalizeAssignment) : [];
   } catch (error) {
     console.error("Error fetching assignments:", error);
     throw error;
@@ -270,7 +281,8 @@ export const createAssignment = async (assignmentData) => {
       },
       body: JSON.stringify(assignmentData),
     });
-    return await parseJsonResponse(response, "Nepodařilo se uložit úkol");
+    const data = await parseJsonResponse(response, "Nepodařilo se uložit úkol");
+    return normalizeAssignment(data);
   } catch (error) {
     console.error("Error creating assignment:", error);
     throw error;
@@ -286,7 +298,8 @@ export const updateAssignment = async (id, updates) => {
       },
       body: JSON.stringify(updates),
     });
-    return await parseJsonResponse(response, "Nepodařilo se upravit úkol");
+    const data = await parseJsonResponse(response, "Nepodařilo se upravit úkol");
+    return normalizeAssignment(data);
   } catch (error) {
     console.error("Error updating assignment:", error);
     throw error;

@@ -180,6 +180,7 @@ export default function TutorDashboard() {
   const [assignmentTitle, setAssignmentTitle] = useState("");
   const [assignmentDescription, setAssignmentDescription] = useState("");
   const [assignmentDueDate, setAssignmentDueDate] = useState("");
+  const [assignmentStatus, setAssignmentStatus] = useState("probiha");
   const [gridSelectionState, setGridSelectionState] = useState({
     isDragging: false,
     dateKey: null,
@@ -584,6 +585,7 @@ export default function TutorDashboard() {
     setAssignmentTitle("");
     setAssignmentDescription("");
     setAssignmentDueDate(lesson.date || "");
+    setAssignmentStatus("probiha");
     setEditingAssignment(null);
     setMaterials([]);
     setAssignments([]);
@@ -598,6 +600,7 @@ export default function TutorDashboard() {
     setAssignmentTitle("");
     setAssignmentDescription("");
     setAssignmentDueDate("");
+    setAssignmentStatus("probiha");
     setMaterials([]);
     setAssignments([]);
     setEditingAssignment(null);
@@ -663,11 +666,13 @@ export default function TutorDashboard() {
         title: assignmentTitle.trim(),
         description: assignmentDescription.trim() || null,
         due_date: assignmentDueDate || selectedLesson.date,
+        status: assignmentStatus || "probiha",
       });
       alert("Úkol byl přidán.");
       setAssignmentTitle("");
       setAssignmentDescription("");
       setAssignmentDueDate(selectedLesson.date || "");
+      setAssignmentStatus("probiha");
       await loadAssignmentsForLesson(selectedLesson.id);
     } catch (err) {
       alert("Chyba při přidání úkolu: " + (err?.message || "neznámá chyba"));
@@ -682,6 +687,7 @@ export default function TutorDashboard() {
       title: assignment.title || "",
       description: assignment.description || "",
       due_date: assignment.due_date || selectedLesson?.date || "",
+      status: assignment.status || "probiha",
     });
   };
 
@@ -697,6 +703,7 @@ export default function TutorDashboard() {
         title: editingAssignment.title.trim(),
         description: editingAssignment.description.trim() || null,
         due_date: editingAssignment.due_date || selectedLesson?.date,
+        status: editingAssignment.status || "probiha",
       });
 
       alert("Úkol byl upraven.");
@@ -1184,6 +1191,15 @@ export default function TutorDashboard() {
                   onChange={(event) => setAssignmentDueDate(event.target.value)}
                   className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm mb-2 bg-white focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
                 />
+                <select
+                  value={assignmentStatus}
+                  onChange={(event) => setAssignmentStatus(event.target.value)}
+                  className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm mb-2 bg-white focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
+                >
+                  <option value="probiha">Probíhá</option>
+                  <option value="hotovo">Hotovo</option>
+                  <option value="dokonceno">Dokončeno</option>
+                </select>
                 <button
                   onClick={handleCreateAssignment}
                   disabled={saving}
@@ -1207,6 +1223,7 @@ export default function TutorDashboard() {
                         >
                           <p className="text-sm font-semibold text-gray-900">{assignment.title}</p>
                           <p className="text-xs text-gray-600 mt-1">Termín: {assignment.due_date || "-"}</p>
+                          <p className="text-xs text-blue-700 mt-1">Stav: {assignment.status || "probiha"}</p>
                         </button>
                       ))}
                     </div>
@@ -1241,6 +1258,17 @@ export default function TutorDashboard() {
                   }
                   className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm mb-3 bg-white focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
                 />
+                <select
+                  value={editingAssignment.status || "probiha"}
+                  onChange={(event) =>
+                    setEditingAssignment((prev) => ({ ...prev, status: event.target.value }))
+                  }
+                  className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm mb-3 bg-white focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
+                >
+                  <option value="probiha">Probíhá</option>
+                  <option value="hotovo">Hotovo</option>
+                  <option value="dokonceno">Dokončeno</option>
+                </select>
                 <div className="flex gap-2">
                   <button
                     onClick={handleSaveEditedAssignment}

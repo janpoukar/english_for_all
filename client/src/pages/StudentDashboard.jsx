@@ -7,6 +7,7 @@ import {
   fetchMaterials,
   getMaterialDownloadUrl,
   resolveFileUrl,
+  updateAssignment,
 } from "../services/api";
 
 const STUDENTS_META_PREFIX = "##students::";
@@ -31,6 +32,7 @@ export default function StudentDashboard() {
   const [lessonMaterials, setLessonMaterials] = useState([]);
   const [lessonAssignments, setLessonAssignments] = useState([]);
   const [resourceLoading, setResourceLoading] = useState(false);
+  const [updatingAssignmentId, setUpdatingAssignmentId] = useState(null);
 
   useEffect(() => {
     // Ověř, že je uživatel přihlášen
@@ -99,6 +101,21 @@ export default function StudentDashboard() {
 
     loadLessonResources();
   }, [selectedLesson]);
+
+  const markAssignmentDone = async (assignmentId) => {
+    if (!selectedLesson?.id || !assignmentId) return;
+
+    try {
+      setUpdatingAssignmentId(assignmentId);
+      await updateAssignment(assignmentId, { status: "hotovo" });
+      const refreshed = await fetchAssignments(selectedLesson.id);
+      setLessonAssignments(Array.isArray(refreshed) ? refreshed : []);
+    } catch (err) {
+      alert("Chyba při změně stavu úkolu: " + (err?.message || "neznámá chyba"));
+    } finally {
+      setUpdatingAssignmentId(null);
+    }
+  };
 
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
@@ -399,6 +416,17 @@ export default function StudentDashboard() {
                       <p className="font-semibold text-gray-800 text-sm">{assignment.title}</p>
                       {assignment.description && <p className="text-sm text-gray-600 mt-1">{assignment.description}</p>}
                       <p className="text-xs text-gray-500 mt-2">Termín: {assignment.due_date || "Není zadán"}</p>
+                      <p className="text-xs text-blue-700 mt-1">Stav: {assignment.status || "probiha"}</p>
+                      {assignment.id && assignment.status !== "hotovo" && assignment.status !== "dokonceno" && (
+                        <button
+                          type="button"
+                          disabled={updatingAssignmentId === assignment.id}
+                          onClick={() => markAssignmentDone(assignment.id)}
+                          className="mt-2 btn-primary text-xs px-3 py-1.5 disabled:opacity-60"
+                        >
+                          {updatingAssignmentId === assignment.id ? "Ukládám…" : "Označit jako hotovo"}
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
