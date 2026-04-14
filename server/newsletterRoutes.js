@@ -1,7 +1,7 @@
 const express = require('express');
-const pool = require('./db');
 const authRoutes = require('./Authroutes');
 const nodemailer = require('nodemailer');
+const { supabaseFetch } = require('./supabase');
 
 const router = express.Router();
 const verifyAdmin = authRoutes.verifyAdmin;
@@ -93,50 +93,20 @@ const buildNewsletterHtml = ({ subject, preheader, imageUrl, imageAlt, body, cta
   `;
 };
 
-const ensureTablesPromise = (async () => {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS newsletter_settings (
-      id INTEGER PRIMARY KEY CHECK (id = 1),
-      title TEXT NOT NULL,
-      subtitle TEXT NOT NULL,
-      button_text TEXT NOT NULL,
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-
-    CREATE TABLE IF NOT EXISTS newsletter_subscribers (
-      id SERIAL PRIMARY KEY,
-      email TEXT NOT NULL UNIQUE,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-
-    CREATE TABLE IF NOT EXISTS newsletter_campaigns (
-      id SERIAL PRIMARY KEY,
-      subject TEXT NOT NULL,
-      body TEXT NOT NULL,
-      subscriber_count INTEGER NOT NULL DEFAULT 0,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-  `);
-})().catch((err) => {
-  console.error('Newsletter table initialization failed:', err);
-});
-
 async function getSettingsRow() {
-  await ensureTablesPromise;
-  const result = await pool.query('SELECT * FROM newsletter_settings WHERE id = 1');
+  const result = await supabaseFetch('/newsletter_settings?id=eq.1&limit=1');
 
-  if (result.rows.length > 0) {
-    return result.rows[0];
+  if (Array.isArray(result) && result.length > 0) {
+    return result[0];
   }
 
-  const inserted = await pool.query(
-    `INSERT INTO newsletter_settings (id, title, subtitle, button_text)
-     VALUES (1, $1, $2, $3)
-     RETURNING *`,
-    [DEFAULT_SETTINGS.title, DEFAULT_SETTINGS.subtitle, DEFAULT_SETTINGS.buttonText]
-  );
+  const inserted = await supabaseFetch('/newsletter_settings', {
+    method: 'POST',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify({ id: 1, title: DEFAULT_SETTINGS.title, subtitle: DEFAULT_SETTINGS.subtitle, button_text: DEFAULT_SETTINGS.buttonText }),
+  });
 
-  return inserted.rows[0];
+  return Array.isArray(inserted) ? inserted[0] : inserted;
 }
 
 router.get('/settings', async (req, res) => {
@@ -186,19 +156,17 @@ router.put('/settings', verifyAdmin, async (req, res) => {
 
 router.post('/subscribe', async (req, res) => {
   try {
-    await ensureTablesPromise;
     const email = String(req.body?.email || '').trim().toLowerCase();
 
     if (!email) {
       return res.status(400).json({ error: 'Vyplň prosím email' });
     }
 
-    await pool.query(
-      `INSERT INTO newsletter_subscribers (email)
-       VALUES ($1)
-       ON CONFLICT (email) DO NOTHING`,
-      [email]
-    );
+    await supabaseFetch('/newsletter_subscribers', {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({ email }),
+    });
 
     res.json({ success: true, message: 'Děkujeme za přihlášení k newsletteru.' });
   } catch (err) {
@@ -209,11 +177,8 @@ router.post('/subscribe', async (req, res) => {
 
 router.get('/subscribers', verifyAdmin, async (req, res) => {
   try {
-    await ensureTablesPromise;
-    const result = await pool.query(
-      'SELECT id, email, created_at FROM newsletter_subscribers ORDER BY created_at DESC'
-    );
-    res.json(result.rows);
+    const result = await supabaseFetch('/newsletter_subscribers?select=id,email,created_at&order=created_at.desc');
+    res.json(Array.isArray(result) ? result : []);
   } catch (err) {
     console.error('Newsletter subscribers error:', err);
     res.status(500).json({ error: 'Nepodařilo se načíst odběratele' });
@@ -222,7 +187,6 @@ router.get('/subscribers', verifyAdmin, async (req, res) => {
 
 router.post('/send', verifyAdmin, async (req, res) => {
   try {
-    await ensureTablesPromise;
     const subject = String(req.body?.subject || '').trim();
     const preheader = String(req.body?.preheader || '').trim();
     const imageUrl = String(req.body?.imageUrl || '').trim();
@@ -235,12 +199,8 @@ router.post('/send', verifyAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Vyplň prosím předmět i text newsletteru' });
     }
 
-    const recipientsResult = await pool.query(
-      `SELECT DISTINCT email FROM users
-       WHERE email IS NOT NULL AND email <> ''
-       ORDER BY email ASC`
-    );
-    const recipients = recipientsResult.rows.map((row) => row.email).filter(Boolean);
+    const usersResult = await supabaseFetch('/users?select=email');
+    const recipients = [...new Set((Array.isArray(usersResult) ? usersResult : []).map((row) => String(row.email || '').trim()).filter(Boolean))];
 
     if (recipients.length === 0) {
       return res.status(400).json({ error: 'V databázi nejsou žádní uživatelé s e-mailem' });
@@ -271,11 +231,11 @@ router.post('/send', verifyAdmin, async (req, res) => {
       }
     }
 
-    await pool.query(
-      `INSERT INTO newsletter_campaigns (subject, body, subscriber_count)
-       VALUES ($1, $2, $3)`,
-      [subject, body, recipients.length]
-    );
+    await supabaseFetch('/newsletter_campaigns', {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({ subject, body, subscriber_count: recipients.length }),
+    });
 
     res.json({
       success: true,

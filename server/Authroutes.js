@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const pool = require('./db');
+const { supabaseFetch } = require('./supabase');
 
 const router = express.Router();
 
@@ -50,12 +50,18 @@ router.post('/register', async (req, res) => {
     const normalizedRole = role === 'tutor' ? 'tutor' : 'student';
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const result = await pool.query(
-      'INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,$4) RETURNING *',
-      [name.trim(), email.trim().toLowerCase(), hashedPassword, normalizedRole]
-    );
+    const result = await supabaseFetch('/users', {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        password_hash: hashedPassword,
+        role: normalizedRole,
+      }),
+    });
 
-    const user = result.rows[0];
+    const user = Array.isArray(result) ? result[0] : result;
     res.status(201).json({
       token: signToken(user),
       user: sanitizeUser(user),
@@ -73,16 +79,15 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ error: 'Vyplň prosím email a heslo' });
   }
 
-  const result = await pool.query(
-    'SELECT * FROM users WHERE email=$1',
-    [email.trim().toLowerCase()]
+  const result = await supabaseFetch(
+    `/users?select=id,name,email,role,password_hash&email=eq.${encodeURIComponent(email.trim().toLowerCase())}&limit=1`
   );
 
-  if (result.rows.length === 0) {
+  if (!Array.isArray(result) || result.length === 0) {
     return res.status(400).json({ error: 'Neexistuje' });
   }
 
-  const user = result.rows[0];
+  const user = result[0];
 
   const valid = await bcrypt.compare(password, user.password_hash);
 
@@ -113,11 +118,8 @@ router.post('/admin/change-password', verifyAdmin, async (req, res) => {
     let userExists = null;
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        const result = await pool.query(
-          'SELECT id FROM users WHERE id = $1::uuid',
-          [userId]
-        );
-        userExists = result.rows.length > 0;
+        const result = await supabaseFetch(`/users?select=id&id=eq.${encodeURIComponent(userId)}&limit=1`);
+        userExists = Array.isArray(result) && result.length > 0;
         break;
       } catch (err) {
         console.error(`Attempt ${attempt} to check user failed:`, err.message);
@@ -135,10 +137,11 @@ router.post('/admin/change-password', verifyAdmin, async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
-        await pool.query(
-          'UPDATE users SET password_hash=$1 WHERE id=$2::uuid',
-          [hashedPassword, userId]
-        );
+        await supabaseFetch(`/users?id=eq.${encodeURIComponent(userId)}`, {
+          method: 'PATCH',
+          headers: { Prefer: 'return=representation' },
+          body: JSON.stringify({ password_hash: hashedPassword }),
+        });
         break;
       } catch (err) {
         console.error(`Attempt ${attempt} to update password failed:`, err.message);
@@ -157,10 +160,8 @@ router.post('/admin/change-password', verifyAdmin, async (req, res) => {
 // Endpoint pro listování uživatelů (jen admin)
 router.get('/admin/users', verifyAdmin, async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT id, name, email, role FROM users ORDER BY role DESC'
-    );
-    res.json(result.rows);
+    const result = await supabaseFetch('/users?select=id,name,email,role&order=role.desc');
+    res.json(Array.isArray(result) ? result : []);
   } catch (err) {
     console.error('Fetch users error:', err);
     res.status(500).json({ error: 'Chyba při načítání uživatelů' });

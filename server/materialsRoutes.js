@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
-const pool = require('./db');
+const { supabaseFetch } = require('./supabase');
 
 const router = express.Router();
 
@@ -31,12 +31,10 @@ router.get('/', async (req, res) => {
 
   try {
     console.log(`[MATERIALS] Fetching materials for lesson: ${lessonId}`);
-    const result = await pool.query(
-      'SELECT id, lesson_id, file_name, file_url, created_at FROM materials WHERE lesson_id = $1 ORDER BY created_at DESC',
-      [lessonId]
-    );
-    console.log(`[MATERIALS] Found ${result.rows.length} materials for lesson ${lessonId}`);
-    res.json(result.rows);
+    const result = await supabaseFetch(`/materials?lesson_id=eq.${encodeURIComponent(lessonId)}&order=created_at.desc`);
+    const materials = Array.isArray(result) ? result : [];
+    console.log(`[MATERIALS] Found ${materials.length} materials for lesson ${lessonId}`);
+    res.json(materials);
   } catch (err) {
     console.error('[MATERIALS] Fetch materials error:', err.message, err.code);
     res.status(500).json({ error: `Chyba při načítání materiálů: ${err.message}` });
@@ -62,14 +60,16 @@ router.post('/', upload.single('file'), async (req, res) => {
   const fileUrl = `/uploads/${req.file.filename}`;
 
   try {
-    console.log(`[MATERIALS] Saving material metadata to Postgres: ${fileName} for lesson ${lessonId}`);
-    const result = await pool.query(
-      'INSERT INTO materials (lesson_id, file_name, file_url) VALUES ($1, $2, $3) RETURNING id, lesson_id, file_name, file_url, created_at',
-      [lessonId, fileName, fileUrl]
-    );
+    console.log(`[MATERIALS] Saving material metadata to Supabase: ${fileName} for lesson ${lessonId}`);
+    const result = await supabaseFetch('/materials', {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({ lesson_id: lessonId, file_name: fileName, file_url: fileUrl }),
+    });
 
-    console.log(`[MATERIALS] Material saved successfully: ${result.rows[0]?.id}`);
-    res.status(201).json(result.rows[0]);
+    const material = Array.isArray(result) ? result[0] : result;
+    console.log(`[MATERIALS] Material saved successfully: ${material?.id}`);
+    res.status(201).json(material);
   } catch (err) {
     console.error('[MATERIALS] Create material error:', err.message, err.code);
     res.status(500).json({ error: `Chyba při ukládání materiálu: ${err.message}` });
@@ -80,11 +80,8 @@ router.get('/:id/download', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await pool.query(
-      'SELECT file_name, file_url FROM materials WHERE id = $1 LIMIT 1',
-      [id]
-    );
-    const material = result.rows[0];
+    const result = await supabaseFetch(`/materials?id=eq.${encodeURIComponent(id)}&select=file_name,file_url`);
+    const material = Array.isArray(result) ? result[0] : null;
 
     if (!material) {
       return res.status(404).json({ error: 'Materiál nebyl nalezen' });

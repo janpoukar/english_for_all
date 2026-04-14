@@ -1,15 +1,15 @@
 const express = require('express');
-const pool = require('./db');
+const { supabaseFetch } = require('./supabase');
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM lessons ORDER BY date, start_time');
-    res.json(result.rows);
+    const result = await supabaseFetch('/lessons?order=date.asc,start_time.asc');
+    res.json(Array.isArray(result) ? result : []);
   } catch (err) {
     console.error('Fetch lessons error:', err);
-    res.status(500).json({ error: 'Chyba při načítání lekcí' });
+    res.status(500).json({ error: `Chyba při načítání lekcí: ${err.message}` });
   }
 });
 
@@ -23,16 +23,24 @@ router.post('/', async (req, res) => {
   const normalizedStatus = ['free', 'booked', 'completed'].includes(status) ? status : 'free';
 
   try {
-    const result = await pool.query(
-      `INSERT INTO lessons (title,description,date,start_time,end_time,tutor_id,status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-      [title, description || null, date, start_time, end_time, tutor_id || null, normalizedStatus]
-    );
+    const result = await supabaseFetch('/lessons', {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({
+        title,
+        description: description || null,
+        date,
+        start_time,
+        end_time,
+        tutor_id: tutor_id || null,
+        status: normalizedStatus,
+      }),
+    });
 
-    res.status(201).json(result.rows[0]);
+    res.status(201).json(Array.isArray(result) ? result[0] : result);
   } catch (err) {
     console.error('Create lesson error:', err);
-    res.status(500).json({ error: 'Chyba při ukládání lekce' });
+    res.status(500).json({ error: `Chyba při ukládání lekce: ${err.message}` });
   }
 });
 
@@ -49,19 +57,21 @@ router.patch('/:id', async (req, res) => {
   const setClause = updates.map(([key], index) => `${key} = $${index + 1}`).join(', ');
 
   try {
-    const result = await pool.query(
-      `UPDATE lessons SET ${setClause} WHERE id = $${updates.length + 1} RETURNING *`,
-      [...values, id]
-    );
+    const updateObject = Object.fromEntries(updates);
+    const result = await supabaseFetch(`/lessons?id=eq.${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify(updateObject),
+    });
 
-    if (result.rows.length === 0) {
+    if (!Array.isArray(result) || result.length === 0) {
       return res.status(404).json({ error: 'Lekce nebyla nalezena' });
     }
 
-    res.json(result.rows[0]);
+    res.json(result[0]);
   } catch (err) {
     console.error('Update lesson error:', err);
-    res.status(500).json({ error: 'Chyba při úpravě lekce' });
+    res.status(500).json({ error: `Chyba při úpravě lekce: ${err.message}` });
   }
 });
 
@@ -69,16 +79,18 @@ router.delete('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await pool.query('DELETE FROM lessons WHERE id = $1 RETURNING id', [id]);
+    const result = await supabaseFetch(`/lessons?id=eq.${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
 
-    if (result.rows.length === 0) {
+    if (result === null) {
       return res.status(404).json({ error: 'Lekce nebyla nalezena' });
     }
 
     res.json({ success: true });
   } catch (err) {
     console.error('Delete lesson error:', err);
-    res.status(500).json({ error: 'Chyba při mazání lekce' });
+    res.status(500).json({ error: `Chyba při mazání lekce: ${err.message}` });
   }
 });
 
