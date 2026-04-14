@@ -31,7 +31,20 @@ router.get('/', async (req, res) => {
 
   try {
     console.log(`[MATERIALS] Fetching materials for lesson: ${lessonId}`);
-    const result = await supabaseFetch(`/materials?lesson_id=eq.${encodeURIComponent(lessonId)}&order=created_at.desc`);
+    let result;
+
+    try {
+      result = await supabaseFetch(`/materials?lesson_id=eq.${encodeURIComponent(lessonId)}&order=created_at.desc`);
+    } catch (orderError) {
+      const message = String(orderError?.message || '').toLowerCase();
+      if (!message.includes('created_at')) {
+        throw orderError;
+      }
+
+      // Backward compatibility for schemas without created_at column.
+      result = await supabaseFetch(`/materials?lesson_id=eq.${encodeURIComponent(lessonId)}`);
+    }
+
     const materials = Array.isArray(result) ? result : [];
     console.log(`[MATERIALS] Found ${materials.length} materials for lesson ${lessonId}`);
     res.json(materials);

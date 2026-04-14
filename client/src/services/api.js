@@ -198,7 +198,7 @@ export const fetchMaterials = async (lessonId) => {
     return result;
   } catch (error) {
     console.error("Error fetching materials:", error, { lessonId });
-    throw new Error(`Chyba při načítání materiálů: ${error?.message || "neznáma chyba"}`);
+    throw error;
   }
 };
 
