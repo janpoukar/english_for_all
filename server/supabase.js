@@ -10,10 +10,22 @@ const normalizeSupabaseRestUrl = (value) => {
   try {
     parsed = new URL(raw);
   } catch {
-    return null;
+    try {
+      parsed = new URL(`https://${raw.replace(/^\/+/, '')}`);
+    } catch {
+      return null;
+    }
   }
 
   const hostname = String(parsed.hostname || '').toLowerCase();
+  if (!hostname) {
+    return null;
+  }
+
+  if (hostname === 'supabase.co') {
+    return null;
+  }
+
   const isDbHost = /^db\.[^.]+\.supabase\.co$/.test(hostname);
 
   if (isDbHost) {
