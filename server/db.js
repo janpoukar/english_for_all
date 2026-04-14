@@ -42,6 +42,18 @@ if (useSsl) {
   poolConfig.ssl = { rejectUnauthorized: false };
 }
 
+const forceIPv4Lookup = (hostname, options, callback) => {
+  const lookupOptions = { family: 4, all: false };
+
+  if (typeof options === 'function') {
+    return dns.lookup(hostname, lookupOptions, options);
+  }
+
+  return dns.lookup(hostname, { ...lookupOptions, ...(options || {}) }, callback);
+};
+
+poolConfig.lookup = forceIPv4Lookup;
+
 // Supabase connection attempts can resolve to IPv6 on some hosts and fail with ENETUNREACH.
 // Force IPv4 so the backend uses the working route consistently.
 poolConfig.family = 4;
