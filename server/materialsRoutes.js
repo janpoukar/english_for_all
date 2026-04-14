@@ -1,14 +1,20 @@
 const express = require('express');
 const multer = require('multer');
 const { createClient } = require('@supabase/supabase-js');
-const { supabaseFetch } = require('./supabase');
+const {
+  supabaseFetch,
+  supabaseResolvedUrl,
+  supabaseResolvedApiKey,
+  supabaseResolvedAuthToken,
+} = require('./supabase');
 
 const router = express.Router();
 
-// Supabase Storage client
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
-const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+// Supabase Storage client (reuse resolved config from supabase.js)
+const supabaseStorageKey = supabaseResolvedAuthToken || supabaseResolvedApiKey;
+const supabase = supabaseResolvedUrl && supabaseStorageKey
+  ? createClient(supabaseResolvedUrl, supabaseStorageKey)
+  : null;
 
 // In-memory storage for multer to get file in memory first
 const storage = multer.memoryStorage();

@@ -272,4 +272,10 @@ const supabaseFetch = async (endpoint, options = {}) => {
   throw new Error(`${lastError?.message || 'Nepodařilo se spojit se Supabase'} (${endpointDetails}${causeDetails})`);
 };
 
-module.exports = { supabaseFetch, getSupabaseDiagnostics };
+module.exports = {
+  supabaseFetch,
+  getSupabaseDiagnostics,
+  supabaseResolvedUrl: SUPABASE_URL,
+  supabaseResolvedApiKey: SUPABASE_API_KEY,
+  supabaseResolvedAuthToken: SUPABASE_AUTH_TOKEN,
+};
