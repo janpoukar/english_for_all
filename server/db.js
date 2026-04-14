@@ -1,5 +1,6 @@
 const { Pool } = require('pg');
 const dns = require('dns');
+const nativeDnsLookup = dns.lookup.bind(dns);
 
 if (typeof dns.setDefaultResultOrder === 'function') {
   dns.setDefaultResultOrder('ipv4first');
@@ -46,10 +47,10 @@ const forceIPv4Lookup = (hostname, options, callback) => {
   const lookupOptions = { family: 4, all: false };
 
   if (typeof options === 'function') {
-    return dns.lookup(hostname, lookupOptions, options);
+    return nativeDnsLookup(hostname, lookupOptions, options);
   }
 
-  return dns.lookup(hostname, { ...lookupOptions, ...(options || {}) }, callback);
+  return nativeDnsLookup(hostname, { ...lookupOptions, ...(options || {}) }, callback);
 };
 
 poolConfig.lookup = forceIPv4Lookup;
@@ -67,29 +68,8 @@ console.log(`[PG] connection source: ${connectionStringCandidate.key || 'none'} 
 
 let lastPoolError = null;
 
-const withIPv4Dns = async (operation) => {
-  const originalLookup = dns.lookup;
-  dns.lookup = (hostname, options, callback) => {
-    if (typeof options === 'function') {
-      return originalLookup(hostname, { family: 4, all: false }, options);
-    }
-
-    if (options && typeof options === 'object') {
-      return originalLookup(hostname, { ...options, family: 4, all: false }, callback);
-    }
-
-    return originalLookup(hostname, { family: 4, all: false }, callback);
-  };
-
-  try {
-    return await operation();
-  } finally {
-    dns.lookup = originalLookup;
-  }
-};
-
-const pgQuery = (...args) => withIPv4Dns(() => pool.query(...args));
-const pgConnect = (...args) => withIPv4Dns(() => pool.connect(...args));
+const pgQuery = (...args) => pool.query(...args);
+const pgConnect = (...args) => pool.connect(...args);
 const pgEnd = (...args) => pool.end(...args);
 
 // Better error handling
