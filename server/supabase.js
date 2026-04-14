@@ -1,3 +1,5 @@
+const jwt = require('jsonwebtoken');
+
 const normalizeSupabaseRestUrl = (value) => {
   const raw = String(value || '').trim();
   if (!raw) return null;
@@ -109,14 +111,52 @@ const pickFirstEnv = (keys) => {
   return null;
 };
 
-const SUPABASE_KEY = pickFirstEnv([
+const SUPABASE_SERVICE_ROLE_KEY = pickFirstEnv([
   'SUPABASE_SERVICE_ROLE_KEY',
   'SUPABASE_SERVICE_KEY',
   'SUPABASE_SECRET_KEY',
   'SUPABASE_KEY',
+]);
+
+const SUPABASE_ANON_KEY = pickFirstEnv([
   'SUPABASE_ANON_KEY',
   'VITE_SUPABASE_ANON_KEY',
 ]);
+
+const SUPABASE_JWT_SECRET = pickFirstEnv([
+  'JWT_SECRET',
+  'SUPABASE_JWT_SECRET',
+  'SUPABASE_JWT_SECRET_KEY',
+]);
+
+const buildServiceRoleToken = () => {
+  if (SUPABASE_SERVICE_ROLE_KEY) {
+    return { token: SUPABASE_SERVICE_ROLE_KEY, source: 'service_role_key' };
+  }
+
+  if (!SUPABASE_JWT_SECRET) {
+    return { token: null, source: 'missing' };
+  }
+
+  const token = jwt.sign(
+    {
+      role: 'service_role',
+      iss: 'supabase',
+      aud: 'authenticated',
+      sub: 'service_role',
+    },
+    SUPABASE_JWT_SECRET,
+    {
+      algorithm: 'HS256',
+      expiresIn: '1h',
+    }
+  );
+
+  return { token, source: 'jwt_secret_signed_service_role' };
+};
+
+const SUPABASE_AUTH = buildServiceRoleToken();
+const SUPABASE_KEY = SUPABASE_AUTH.token || SUPABASE_ANON_KEY;
 
 const SUPABASE_ENV_PRESENT = {
   SUPABASE_URL: Boolean(process.env.SUPABASE_URL),
@@ -128,6 +168,9 @@ const SUPABASE_ENV_PRESENT = {
   SUPABASE_KEY: Boolean(process.env.SUPABASE_KEY),
   SUPABASE_ANON_KEY: Boolean(process.env.SUPABASE_ANON_KEY),
   VITE_SUPABASE_ANON_KEY: Boolean(process.env.VITE_SUPABASE_ANON_KEY),
+  JWT_SECRET: Boolean(process.env.JWT_SECRET),
+  SUPABASE_JWT_SECRET: Boolean(process.env.SUPABASE_JWT_SECRET),
+  SUPABASE_JWT_SECRET_KEY: Boolean(process.env.SUPABASE_JWT_SECRET_KEY),
 };
 
 const SUPABASE_URL_SOURCE = SUPABASE_URL_CANDIDATES.find((value) => normalizeSupabaseRestUrl(value)) || null;
@@ -145,13 +188,14 @@ const getSupabaseRoleFromJwt = (jwt) => {
 
 const resolvedRole = getSupabaseRoleFromJwt(SUPABASE_KEY);
 console.log(
-  `[SUPABASE] URL configured: ${Boolean(SUPABASE_URL)} | url source: ${SUPABASE_URL_SOURCE ? 'set' : 'missing'} | key role: ${resolvedRole} | env present: ${JSON.stringify(SUPABASE_ENV_PRESENT)}`
+  `[SUPABASE] URL configured: ${Boolean(SUPABASE_URL)} | url source: ${SUPABASE_URL_SOURCE ? 'set' : 'missing'} | auth source: ${SUPABASE_AUTH.source} | key role: ${resolvedRole} | env present: ${JSON.stringify(SUPABASE_ENV_PRESENT)}`
 );
 
 const getSupabaseDiagnostics = () => ({
   urlConfigured: Boolean(SUPABASE_URL),
   urlSourceConfigured: Boolean(SUPABASE_URL_SOURCE),
   resolvedHost: SUPABASE_RESOLVED_HOST,
+  authSource: SUPABASE_AUTH.source,
   keyRole: resolvedRole,
   keyLength: SUPABASE_KEY ? SUPABASE_KEY.length : 0,
   envPresent: SUPABASE_ENV_PRESENT,
@@ -169,7 +213,7 @@ const parseJsonResponse = async (response) => {
 
 const supabaseFetch = async (endpoint, options = {}) => {
   if (SUPABASE_URL_OPTIONS.length === 0 || !SUPABASE_KEY) {
-    throw new Error('Chybí Supabase konfigurace na serveru (SUPABASE_URL a SUPABASE_SERVICE_ROLE_KEY/SUPABASE_ANON_KEY)');
+    throw new Error('Chybí Supabase konfigurace na serveru (SUPABASE_URL a service nebo anon klíč / JWT secret)');
   }
 
   let lastError = null;
