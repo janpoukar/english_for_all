@@ -21,6 +21,25 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 const BUCKET_NAME = 'lesson-materials';
+let bucketReady = false;
+
+const ensureStorageBucket = async () => {
+  if (!supabase || bucketReady) return;
+
+  const { error } = await supabase.storage.createBucket(BUCKET_NAME, {
+    public: false,
+  });
+
+  if (error) {
+    const message = String(error.message || '').toLowerCase();
+    const alreadyExists = message.includes('already exists') || message.includes('duplicate');
+    if (!alreadyExists) {
+      throw new Error(`Storage bucket initialization failed: ${error.message}`);
+    }
+  }
+
+  bucketReady = true;
+};
 
 const fixMojibake = (value = '') => {
   const text = String(value || '');
@@ -133,14 +152,26 @@ router.post('/', upload.single('file'), async (req, res) => {
 
   try {
     console.log(`[MATERIALS] Uploading file to Storage: ${storagePath}`);
-    
-    // Upload to Supabase Storage
-    const { data, error: uploadError } = await supabase.storage
+
+    let uploadResult = await supabase.storage
       .from(BUCKET_NAME)
       .upload(storagePath, req.file.buffer, {
         contentType: req.file.mimetype,
         upsert: false,
       });
+
+    let uploadError = uploadResult.error;
+
+    if (uploadError && /bucket\s+not\s+found/i.test(String(uploadError.message || ''))) {
+      await ensureStorageBucket();
+      uploadResult = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(storagePath, req.file.buffer, {
+          contentType: req.file.mimetype,
+          upsert: false,
+        });
+      uploadError = uploadResult.error;
+    }
 
     if (uploadError) {
       console.error('[MATERIALS] Storage upload error:', uploadError);
