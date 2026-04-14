@@ -126,7 +126,6 @@ const SUPABASE_ANON_KEY = pickFirstEnv([
 ]);
 
 const SUPABASE_JWT_SECRET = pickFirstEnv([
-  'JWT_SECRET',
   'SUPABASE_JWT_SECRET',
   'SUPABASE_JWT_SECRET_KEY',
 ]);
@@ -172,7 +171,6 @@ const SUPABASE_ENV_PRESENT = {
   SUPABASE_KEY: Boolean(process.env.SUPABASE_KEY),
   SUPABASE_ANON_KEY: Boolean(process.env.SUPABASE_ANON_KEY),
   VITE_SUPABASE_ANON_KEY: Boolean(process.env.VITE_SUPABASE_ANON_KEY),
-  JWT_SECRET: Boolean(process.env.JWT_SECRET),
   SUPABASE_JWT_SECRET: Boolean(process.env.SUPABASE_JWT_SECRET),
   SUPABASE_JWT_SECRET_KEY: Boolean(process.env.SUPABASE_JWT_SECRET_KEY),
 };

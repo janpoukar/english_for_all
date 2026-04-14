@@ -68,9 +68,13 @@ console.log(`[PG] connection source: ${connectionStringCandidate.key || 'none'} 
 
 let lastPoolError = null;
 
-const pgQuery = (...args) => pool.query(...args);
-const pgConnect = (...args) => pool.connect(...args);
-const pgEnd = (...args) => pool.end(...args);
+const nativePoolQuery = pool.query.bind(pool);
+const nativePoolConnect = pool.connect.bind(pool);
+const nativePoolEnd = pool.end.bind(pool);
+
+const pgQuery = (...args) => nativePoolQuery(...args);
+const pgConnect = (...args) => nativePoolConnect(...args);
+const pgEnd = (...args) => nativePoolEnd(...args);
 
 // Better error handling
 pool.on('error', (err) => {
