@@ -12,8 +12,8 @@ const contactEmail = 'efa.anglictina@gmail.com';
 
 const DEFAULT_SMTP = {
   host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
+  port: 465,
+  secure: true,
   user: 'efa.anglictina@gmail.com',
   pass: 'bfnpmiwfcftlmzdi',
   from: 'efa.anglictina@gmail.com',
