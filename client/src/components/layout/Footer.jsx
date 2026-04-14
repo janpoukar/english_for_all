@@ -176,12 +176,12 @@ export default function Footer() {
                 <p>&copy; {currentYear} English for All. Všechna práva vyhrazena.</p>
               </div>
               <div className="text-center">
-                <a href="#" className="hover:text-white transition mr-4 font-medium hover:text-blue-400 duration-300">
+                <Link to="/privacy" className="hover:text-white transition mr-4 font-medium hover:text-blue-400 duration-300">
                   Zásady ochrany
-                </a>
-                <a href="#" className="hover:text-white transition font-medium hover:text-blue-400 duration-300">
+                </Link>
+                <Link to="/terms" className="hover:text-white transition font-medium hover:text-blue-400 duration-300">
                   Podmínky použití
-                </a>
+                </Link>
               </div>
               <div className="text-right">
                 <Link

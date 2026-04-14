@@ -14,6 +14,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminPanel from "./pages/AdminPanel";
 import TutorDashboard from "./pages/TutorDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Terms from "./pages/Terms";
 
 function ScrollToTop() {
   const location = useLocation();
@@ -46,6 +48,8 @@ function App() {
             <Route path="/admin-panel" element={<AdminPanel />} />
             <Route path="/tutor-dashboard" element={<TutorDashboard />} />
             <Route path="/student-dashboard" element={<StudentDashboard />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<Terms />} />
           </Routes>
         </div>
         <Footer />
