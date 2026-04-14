@@ -15,7 +15,7 @@ const DEFAULT_SMTP = {
   port: 587,
   secure: false,
   user: 'efa.anglictina@gmail.com',
-  pass: 'isigfazopkfvbwulv',
+  pass: 'bfnpmiwfcftlmzdi',
   from: 'efa.anglictina@gmail.com',
 };
 
