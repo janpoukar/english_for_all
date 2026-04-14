@@ -335,9 +335,12 @@ export default function StudentDashboard() {
               ) : (
                 <div className="space-y-2">
                   {lessonMaterials.map((material) => {
-                    const url = resolveFileUrl(material.file_url || "");
-                    const external = /^https?:\/\//i.test(url);
+                    const rawFileUrl = material.file_url || "";
+                    const hasLegacyLocalUrl = rawFileUrl.startsWith("local://");
+                    const resolvedUrl = hasLegacyLocalUrl ? "" : resolveFileUrl(rawFileUrl);
                     const downloadUrl = getMaterialDownloadUrl(material.id);
+                    const openUrl = resolvedUrl || downloadUrl;
+                    const directDownloadUrl = resolvedUrl || downloadUrl;
                     return (
                       <div key={material.id} className="bg-blue-50 p-3 rounded-lg border border-blue-200 flex items-center justify-between gap-3">
                         <div>
@@ -349,9 +352,9 @@ export default function StudentDashboard() {
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          {external ? (
+                          {openUrl ? (
                             <a
-                              href={url}
+                              href={openUrl}
                               target="_blank"
                               rel="noreferrer"
                               className="btn-secondary text-sm px-3 py-1.5 whitespace-nowrap"
@@ -359,11 +362,12 @@ export default function StudentDashboard() {
                               Otevřít
                             </a>
                           ) : (
-                            <span className="text-xs text-gray-500">Soubor uložen</span>
+                            <span className="text-xs text-gray-500">Soubor nelze otevřít</span>
                           )}
-                          {downloadUrl && (
+                          {directDownloadUrl && !hasLegacyLocalUrl && (
                             <a
-                              href={downloadUrl}
+                              href={directDownloadUrl}
+                              download={material.file_name || true}
                               className="btn-primary text-sm px-3 py-1.5 whitespace-nowrap"
                             >
                               Stáhnout
