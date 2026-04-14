@@ -7,27 +7,27 @@ export default function Courses() {
     {
       imageSrc: "/pictures/begginer.jpg",
       imageAlt: "Začátečníci - učební materiály",
-      title: "Začátečníci (A1-A2)",
+      title: "Začátečníci (A1–A2)",
       description: "Naučte se základy angličtiny - slovní zásobu, gramatiku a jednoduché rozhovory.",
       features: ["Základní slovní zásoba", "Jednoduché věty", "Každodenní situace", "Výslovnost"]
     },
     {
       imageSrc: "/pictures/advanced.jpg",
-      imageAlt: "Střední úroveň - pokročilejší výuka",
-      title: "Střední úroveň (B1-B2)",
+      imageAlt: "Střední úroveň – pokročilejší výuka",
+      title: "Střední úroveň (B1–B2)",
       description: "Zlepšete se v psaní, čtení a mluvení. Lépe pochopíte angličtinu v různých kontextech.",
       features: ["Komplexní gramatika", "Akademické texty", "Diskuse a argumenty", "Psaní esejů"]
     },
     {
       imageSrc: "/pictures/pro.jpg",
-      imageAlt: "Pokročilí kurz angličtiny",
+      imageAlt: "Pokročilý kurz angličtiny",
       title: "Pokročilí (C1+)",
-      description: "Dosáhněte dokonalosti. Mluvte jako rodilý mluvčí a čtěte složité texty bez problémů.",
-      features: ["Nuancované vyjadřování", "Odborné texty", "Kulturní kontexty", "Výtvarné psaní"]
+      description: "Dosáhněte pokročilé úrovně. Mluvte plynule a čtěte složité texty bez problémů.",
+      features: ["Nuancované vyjadřování", "Odborné texty", "Kulturní kontexty", "Tvůrčí psaní"]
     },
     {
       imageSrc: "/pictures/maturita.jpg",
-      imageAlt: "Příprava k maturitě",
+      imageAlt: "Maturitní příprava",
       title: "Příprava k maturitě",
       description: "Cílená příprava na maturitní zkoušku z angličtiny včetně modelových úloh.",
       features: ["Poslech", "Čtení s porozuměním", "Psaní", "Ústní část a modelové otázky"]
@@ -37,7 +37,7 @@ export default function Courses() {
       imageAlt: "Příprava na jazykové testy",
       title: "Příprava na testy (FCE, TOEFL, IELTS)",
       description: "Intenzivní příprava k mezinárodním testům s důrazem na FCE a další zkoušky.",
-      features: ["FCE strategie", "Praxe se starými testy", "Časový management", "Mock zkoušky"]
+      features: ["FCE strategie", "Procvičování reálných testů", "Časový management", "Modelové zkoušky"]
     },
     {
       imageSrc: "/pictures/conversation.jpg",
@@ -74,8 +74,8 @@ export default function Courses() {
           <h2 className="text-4xl font-bold text-gray-800 mb-12 text-center">Co získáte v každém kurzu</h2>
           <div className="grid md:grid-cols-4 gap-8">
             {[
-              { icon: "📖", title: "Kvalitní Materiály", desc: "Moderní učebnice a online zdroje" },
-              { icon: "👨‍🎓", title: "Experti", desc: "Certifikovaní rodilí mluvčí" },
+              { icon: "📖", title: "Kvalitní materiály", desc: "Moderní učebnice a online zdroje" },
+              { icon: "👨‍🎓", title: "Zkušení lektoři", desc: "Zkušení lektoři s praxí" },
               { icon: "🎯", title: "Personalizace", desc: "Plán přizpůsobený vám" },
               { icon: "⏱️", title: "Flexibilita", desc: "Výuka podle vašeho tempa" }
             ].map((item, idx) => (

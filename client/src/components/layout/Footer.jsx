@@ -116,6 +116,7 @@ export default function Footer() {
                 <Link to="/privacy" className="hover:text-white transition mr-4 font-medium hover:text-blue-400 duration-300">
                   Zásady ochrany
                 </Link>
+                <span className="mr-4 text-gray-500">|</span>
                 <Link to="/terms" className="hover:text-white transition font-medium hover:text-blue-400 duration-300">
                   Podmínky použití
                 </Link>
@@ -127,7 +128,7 @@ export default function Footer() {
                 >
                   Správa stránky
                 </Link>
-              </div>``
+              </div>
             </div>
           </div>
         </div>
