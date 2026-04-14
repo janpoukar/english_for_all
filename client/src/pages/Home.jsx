@@ -126,7 +126,6 @@ export default function Home() {
           <div className="text-center mb-16 md:mb-20 animate-fade-in-up">
             <span className="badge badge-primary mb-4 inline-block text-xs md:text-sm px-4 py-2">NAŠE SLUŽBY</span>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-snug">Najděte kurz pro Vás</h2>
-            <p className="text-base md:text-lg text-gray-600 max-w-3xl mx-auto">Doučování, maturita i FCE příprava na jednom místě</p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
@@ -269,7 +268,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-4 md:px-8 text-center relative z-10 animate-fade-in-up">
           <h2 className="text-4xl md:text-5xl font-black mb-6 leading-snug">Připraveni začít?</h2>
           <p className="text-lg md:text-xl text-gray-100 mb-10 leading-relaxed max-w-2xl mx-auto">
-            Zarezervujte si bezplatnou konzultaci a nechte se poradit ohledně vašich cílů
+            Objednejte si první lekci a posuňte svou angličtinu dál
           </p>
           <div className="flex flex-col md:flex-row gap-4 justify-center">
             <Link to="/contact" className="btn-primary hover-shine px-8 py-4 text-base md:text-lg font-bold">

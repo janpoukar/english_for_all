@@ -23,7 +23,7 @@ export default function Courses() {
       imageAlt: "Pokročilý kurz angličtiny",
       title: "Pokročilí (C1+)",
       description: "Dosáhněte pokročilé úrovně. Mluvte plynule a čtěte složité texty bez problémů.",
-      features: ["Nuancované vyjadřování", "Odborné texty", "Kulturní kontexty", "Tvůrčí psaní"]
+      features: ["Pokročilé vyjadřování", "Odborné texty", "Kulturní kontexty", "Tvůrčí psaní"]
     },
     {
       imageSrc: "/pictures/maturita.jpg",
@@ -75,7 +75,7 @@ export default function Courses() {
           <div className="grid md:grid-cols-4 gap-8">
             {[
               { icon: "📖", title: "Kvalitní materiály", desc: "Moderní učebnice a online zdroje" },
-              { icon: "👨‍🎓", title: "Zkušení lektoři", desc: "Zkušení lektoři s praxí" },
+              { icon: "👨‍🎓", title: "Zkušená lektorka", desc: "Zkušená lektorka s praxí" },
               { icon: "🎯", title: "Personalizace", desc: "Plán přizpůsobený vám" },
               { icon: "⏱️", title: "Flexibilita", desc: "Výuka podle vašeho tempa" }
             ].map((item, idx) => (
