@@ -4,39 +4,39 @@ export default function Gallery() {
   const images = [
     {
       id: 1,
-      title: "Moderní učebna",
-      description: "Naše hlavní učebna vybavená nejnovější technologií",
-      url: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=800&h=600&fit=crop"
+      title: "Naše učebna",
+      description: "Prostor pro individuální i skupinovou výuku",
+      url: "/pictures/ucebna1.jpg"
     },
     {
       id: 2,
+      title: "Druhá učebna",
+      description: "Pohodlné zázemí pro výuku angličtiny",
+      url: "/pictures/ucebna2.jpg"
+    },
+    {
+      id: 3,
       title: "Skupinová lekce",
       description: "Studenti během skupinové konverzační lekce",
       url: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=600&fit=crop"
     },
     {
-      id: 3,
+      id: 4,
       title: "Individuální výuka",
       description: "One-on-one výuka s naším certifikovaným lektorem",
       url: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&h=600&fit=crop"
     },
     {
-      id: 4,
+      id: 5,
       title: "Knihovna",
       description: "Bohatá sbírka anglických knih a materiálů",
       url: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&h=600&fit=crop"
     },
     {
-      id: 5,
+      id: 6,
       title: "Online platforma",
       description: "Studujte odkudkoliv s naší online platformou",
       url: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=600&fit=crop"
-    },
-    {
-      id: 6,
-      title: "Diplomy a certifikáty",
-      description: "Absolventi s jejich dosažení",
-      url: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&h=600&fit=crop"
     }
   ];
 
