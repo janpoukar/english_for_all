@@ -1,4 +1,9 @@
 const { Pool } = require('pg');
+const dns = require('dns');
+
+if (typeof dns.setDefaultResultOrder === 'function') {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 const useSsl = (process.env.DB_SSL || 'true') !== 'false';
 const connectionString = process.env.DATABASE_URL;
