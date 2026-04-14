@@ -95,6 +95,24 @@ const fetchAssignmentByKnownIdColumns = async (id) => {
   return null;
 };
 
+const findAssignmentByOriginalPayload = async (original) => {
+  const lessonId = original?.lesson_id;
+  const originalTitle = String(original?.title || '').trim();
+  if (!lessonId || !originalTitle) {
+    return null;
+  }
+
+  const result = await supabaseFetch(`/assignments?lesson_id=eq.${encodeURIComponent(lessonId)}`);
+  if (!Array.isArray(result) || result.length === 0) {
+    return null;
+  }
+
+  return (
+    result.find((item) => String(item?.title || '').trim() === originalTitle) ||
+    null
+  );
+};
+
 const mergeStatusFallback = (assignment) => {
   if (!assignment) return assignment;
 
@@ -199,6 +217,7 @@ router.post('/', async (req, res) => {
 router.patch('/:id', async (req, res) => {
   const { id } = req.params;
   const updates = {};
+  const original = req.body?._original || null;
 
   for (const key of ['title', 'description', 'due_date', 'status']) {
     if (req.body?.[key] !== undefined) {
@@ -218,6 +237,14 @@ router.patch('/:id', async (req, res) => {
     if (requestedNonStatusUpdate) {
       updated = await patchAssignmentByKnownIdColumns(id, nonStatusUpdates);
 
+      if (!updated && original) {
+        const originalMatch = await findAssignmentByOriginalPayload(original);
+        const originalMatchId = getAssignmentId(originalMatch);
+        if (originalMatchId) {
+          updated = await patchAssignmentByKnownIdColumns(originalMatchId, nonStatusUpdates);
+        }
+      }
+
       if (!updated) {
         return res.status(404).json({ error: 'Úkol nebyl nalezen nebo nelze upravit' });
       }
@@ -230,6 +257,19 @@ router.patch('/:id', async (req, res) => {
         const statusUpdateResult = await patchAssignmentByKnownIdColumns(id, { status: normalizedStatus });
         if (statusUpdateResult) {
           updated = statusUpdateResult;
+        }
+
+        if (!statusUpdateResult && original) {
+          const originalMatch = await findAssignmentByOriginalPayload(original);
+          const originalMatchId = getAssignmentId(originalMatch);
+          if (originalMatchId) {
+            const fallbackStatusResult = await patchAssignmentByKnownIdColumns(originalMatchId, {
+              status: normalizedStatus,
+            });
+            if (fallbackStatusResult) {
+              updated = fallbackStatusResult;
+            }
+          }
         }
       } catch (statusErr) {
         if (!isMissingColumnError(statusErr, 'status')) {

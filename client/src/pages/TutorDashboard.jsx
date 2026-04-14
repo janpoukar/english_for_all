@@ -688,6 +688,11 @@ export default function TutorDashboard() {
       description: assignment.description || "",
       due_date: assignment.due_date || selectedLesson?.date || "",
       status: assignment.status || "probiha",
+      _original: {
+        id: assignment.id,
+        title: assignment.title || "",
+        lesson_id: selectedLesson?.id || assignment.lesson_id || null,
+      },
     });
   };
 
@@ -704,6 +709,7 @@ export default function TutorDashboard() {
         description: editingAssignment.description.trim() || null,
         due_date: editingAssignment.due_date || selectedLesson?.date,
         status: editingAssignment.status || "probiha",
+        _original: editingAssignment._original,
       });
 
       alert("Úkol byl upraven.");
