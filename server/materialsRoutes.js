@@ -49,6 +49,22 @@ const generateStorageFileName = (originalName) => {
   return `${Date.now()}-${safeBase || 'soubor'}${ext}`;
 };
 
+const extractStoragePath = (fileUrl = '') => {
+  const value = String(fileUrl || '').trim();
+  if (!value) return '';
+
+  if (value.startsWith(`storage://${BUCKET_NAME}/`)) {
+    return value.replace(`storage://${BUCKET_NAME}/`, '');
+  }
+
+  const publicMatch = value.match(/\/storage\/v1\/object\/public\/[^/]+\/(.+)$/i);
+  if (publicMatch && publicMatch[1]) {
+    return decodeURIComponent(publicMatch[1]);
+  }
+
+  return '';
+};
+
 router.get('/', async (req, res) => {
   const { lesson_id: lessonId } = req.query;
 
@@ -125,12 +141,7 @@ router.post('/', upload.single('file'), async (req, res) => {
       throw new Error(`Storage upload failed: ${uploadError.message}`);
     }
 
-    // Get public URL for the file
-    const { data: publicUrlData } = supabase.storage
-      .from(BUCKET_NAME)
-      .getPublicUrl(storagePath);
-
-    const fileUrl = publicUrlData?.publicUrl || '';
+    const fileUrl = `storage://${BUCKET_NAME}/${storagePath}`;
 
     console.log(`[MATERIALS] Saving material metadata to Supabase: ${displayName} for lesson ${lessonId}`);
     const result = await supabaseFetch('/materials', {
@@ -167,14 +178,33 @@ router.get('/:id/download', async (req, res) => {
       return res.status(400).json({ error: 'Materiál nelze stáhnout' });
     }
 
-    // Redirect to Supabase Storage public URL or proxy the download
     const downloadFileName = displayFileName(material.file_name);
-    
-    // Set content disposition header for download
-    res.setHeader('Content-Disposition', `attachment; filename="${downloadFileName}"`);
-    
-    // Redirect to the file URL (browser will download it)
-    return res.redirect(material.file_url);
+    const storagePath = extractStoragePath(material.file_url);
+
+    if (storagePath) {
+      if (!supabase) {
+        return res.status(500).json({ error: 'Chyba: Storage není dostupný' });
+      }
+
+      const { data: signedData, error: signedError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .createSignedUrl(storagePath, 120);
+
+      if (signedError || !signedData?.signedUrl) {
+        console.error('[MATERIALS] Signed URL error:', signedError);
+        return res.status(404).json({ error: 'Soubor nebyl nalezen ve Storage' });
+      }
+
+      res.setHeader('Content-Disposition', `attachment; filename="${downloadFileName}"`);
+      return res.redirect(signedData.signedUrl);
+    }
+
+    if (/^https?:\/\//i.test(material.file_url)) {
+      res.setHeader('Content-Disposition', `attachment; filename="${downloadFileName}"`);
+      return res.redirect(material.file_url);
+    }
+
+    return res.status(404).json({ error: 'Soubor není dostupný' });
   } catch (err) {
     console.error('[MATERIALS] Download material error:', err.message, err.code);
     return res.status(500).json({ error: `Chyba při stahování materiálu: ${err.message}` });
