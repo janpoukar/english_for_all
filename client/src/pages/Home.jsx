@@ -9,21 +9,21 @@ export default function Home() {
       imageAlt: "Doučování",
       title: "Doučování",
       description: "Cílená výuka pro snadnou komunikaci v zahraničí, v běžných situacích i na cestách.",
-      features: ["Praktické fráze", "Jistota v běžné komunikaci", "Konverzační trénink", "Důraz na používání jazyka v praxi"]
+      features: ["✓ Praktické fráze", "✓ Jistota v běžné komunikaci", "✓ Konverzační trénink", "✓ Důraz na používání jazyka v praxi"]
     },
     {
       imageSrc: "/pictures/graduation.png",
       imageAlt: "Příprava k maturitě",
       title: "Příprava k maturitě",
       description: "Systematická příprava na písemnou i ústní část maturitní zkoušky z angličtiny.",
-      features: ["Modelové testy", "Maturitní témata", "Nácvik ústní části", "Strategie pro lepší výsledek"]
+      features: ["✓ Modelové testy", "✓ Maturitní témata", "✓ Nácvik ústní části", "✓ Strategie pro lepší výsledek"]
     },
     {
       imageSrc: "/pictures/fce.png",
       imageAlt: "Příprava k FCE zkouškám",
       title: "Příprava k FCE zkouškám",
       description: "Komplexní trénink na Cambridge B2 First (FCE) včetně všech částí zkoušky.",
-      features: ["Reading, Writing, Listening, Speaking", "Autentické testové úlohy", "Tipy ke každé části", "Postupná příprava na zkoušku"]
+      features: ["✓ Reading, Writing, Listening, Speaking", "✓ Autentické testové úlohy", "✓ Tipy ke každé části", "✓ Postupná příprava na zkoušku"]
     }
   ];
 
@@ -107,7 +107,7 @@ export default function Home() {
                 </div>
                 <div className="card-modern bg-white/10 glass-effect backdrop-blur border border-white/30 hover-lift p-6 transform transition-all">
                   <p className="font-bold text-lg mb-2 text-white">📊 Pokrok v reálném čase</p>
-                  <p className="text-sm text-gray-100">Sledujte vaše zlepšování</p>
+                  <p className="text-sm text-gray-100">Sledujte své zlepšování</p>
                 </div>
                 <div className="card-modern bg-white/10 glass-effect backdrop-blur border border-white/30 hover-lift p-6 transform transition-all">
                   <p className="font-bold text-lg mb-2 text-white">📍 Umístění</p>
@@ -272,7 +272,7 @@ export default function Home() {
           </p>
           <div className="flex flex-col md:flex-row gap-4 justify-center">
             <Link to="/contact" className="btn-primary hover-shine px-8 py-4 text-base md:text-lg font-bold">
-              Zarezervovat konzultaci
+              Zarezervovat lekci
             </Link>
             <Link to="/pricing" className="btn-secondary text-white border-white hover:bg-white/20 px-8 py-4 text-base md:text-lg font-bold">
               Podívat se na ceník

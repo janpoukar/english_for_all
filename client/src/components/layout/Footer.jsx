@@ -91,15 +91,15 @@ export default function Footer() {
               <h4 className="font-bold mb-6 text-lg text-white">Kontakt</h4>
               <ul className="space-y-4">
                 <li className="text-gray-300 hover:text-white transition group">
-                  <span className="block font-bold text-white mb-1 text-sm group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-orange-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">Adresa:</span>
+                  <span className="block font-bold text-white mb-1 text-sm group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-orange-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">Adresa: </span>
                   <span className="text-xs text-gray-400">Křížová, Jihlava</span>
                 </li>
                 <li className="text-gray-300 hover:text-white transition group">
-                  <span className="block font-bold text-white mb-1 text-sm group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-orange-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">Telefon:</span>
+                  <span className="block font-bold text-white mb-1 text-sm group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-orange-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">Telefon: </span>
                   <span className="text-xs text-gray-400">+420 777 123 456</span>
                 </li>
                 <li className="text-gray-300 hover:text-white transition group">
-                  <span className="block font-bold text-white mb-1 text-sm group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-orange-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">Email:</span>
+                  <span className="block font-bold text-white mb-1 text-sm group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-orange-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">Email: </span>
                   <span className="text-xs text-gray-400">efa.anglictina@gmail.com</span>
                 </li>
               </ul>
@@ -116,7 +116,7 @@ export default function Footer() {
                 <Link to="/privacy" className="hover:text-white transition mr-4 font-medium hover:text-blue-400 duration-300">
                   Zásady ochrany
                 </Link>
-                <span className="mr-4 text-gray-500">|</span>
+                <span className="mx-4 text-gray-500">|</span>
                 <Link to="/terms" className="hover:text-white transition font-medium hover:text-blue-400 duration-300">
                   Podmínky použití
                 </Link>
