@@ -5,6 +5,19 @@ if (typeof dns.setDefaultResultOrder === 'function') {
   dns.setDefaultResultOrder('ipv4first');
 }
 
+const originalDnsLookup = dns.lookup.bind(dns);
+dns.lookup = (hostname, options, callback) => {
+  if (typeof options === 'function') {
+    return originalDnsLookup(hostname, { family: 4, all: false }, options);
+  }
+
+  if (options && typeof options === 'object') {
+    return originalDnsLookup(hostname, { ...options, family: 4, all: false }, callback);
+  }
+
+  return originalDnsLookup(hostname, { family: 4, all: false }, callback);
+};
+
 const useSsl = (process.env.DB_SSL || 'true') !== 'false';
 const connectionString = process.env.DATABASE_URL;
 
@@ -21,10 +34,6 @@ const poolConfig = connectionString
 if (useSsl) {
   poolConfig.ssl = { rejectUnauthorized: false };
 }
-
-poolConfig.lookup = (hostname, options, callback) => {
-  dns.lookup(hostname, { family: 4, all: false }, callback);
-};
 
 // Supabase connection attempts can resolve to IPv6 on some hosts and fail with ENETUNREACH.
 // Force IPv4 so the backend uses the working route consistently.
