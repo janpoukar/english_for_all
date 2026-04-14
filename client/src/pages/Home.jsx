@@ -150,7 +150,7 @@ export default function Home() {
             <div className="animate-slide-in-left">
               <span className="badge badge-primary mb-4 inline-block text-xs md:text-sm px-4 py-2">PROČ SI NÁS VYBRAT</span>
               <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-900 to-red-700 bg-clip-text text-transparent mb-8 leading-snug">
-                Jsme vaší perfektní volbou
+                Vase perfektni volba
               </h2>
               
               <div className="space-y-5">
@@ -158,14 +158,14 @@ export default function Home() {
                   <span className="text-3xl md:text-4xl flex-shrink-0 glow-pulse">🎯</span>
                   <div className="min-w-0">
                     <h3 className="font-bold text-base md:text-lg text-gray-900">Personalizovaný přístup</h3>
-                    <p className="text-sm md:text-base text-gray-600">Každý student je jiný a my to respektujeme</p>
+                    <p className="text-sm md:text-base text-gray-600">personalisovana vyuka pro potreby kazdeho studenta</p>
                   </div>
                 </div>
                 <div className="flex gap-4 hover-lift p-6 rounded-xl transition bg-white/50 border border-red-100 shadow-soft hover:shadow-medium">
                   <span className="text-3xl md:text-4xl flex-shrink-0 glow-pulse">👨‍🎓</span>
                   <div className="min-w-0">
                     <h3 className="font-bold text-base md:text-lg text-gray-900">Dlouholeté zkušenosti</h3>
-                    <p className="text-sm md:text-base text-gray-600">Opíráme se o praxi, která pomáhá studentům růst s jistotou</p>
+                    <p className="text-sm md:text-base text-gray-600">dlouholeta praxe v vyuce anglictiny a priprave k maturite a testum fce</p>
                   </div>
                 </div>
                 <div className="flex gap-4 hover-lift p-6 rounded-xl transition bg-white/50 border border-blue-100 shadow-soft hover:shadow-medium">
@@ -179,7 +179,7 @@ export default function Home() {
                   <span className="text-3xl md:text-4xl flex-shrink-0 glow-pulse">📈</span>
                   <div className="min-w-0">
                     <h3 className="font-bold text-base md:text-lg text-gray-900">Prokázané výsledky</h3>
-                    <p className="text-sm md:text-base text-gray-600">95% našich studentů dosahuje svých cílů</p>
+                    <p className="text-sm md:text-base text-gray-600">95% studentů dosahuje svých cílů</p>
                   </div>
                 </div>
               </div>
@@ -193,7 +193,7 @@ export default function Home() {
                 
                 <div className="space-y-3 text-left">
                   <div className="bg-white/10 glass-effect p-4 rounded-lg border border-white/20">
-                    <p className="font-semibold text-sm md:text-base">✓ "Výborný tutor!" - Aneta K.</p>
+                    <p className="font-semibold text-sm md:text-base">Mohu doporucit, kladne zkusenosti,</p>
                   </div>
                   <div className="bg-white/10 glass-effect p-4 rounded-lg border border-white/20">
                     <p className="font-semibold text-sm md:text-base">✓ "Velký progres za krátkou dobu" - David N.</p>
@@ -213,7 +213,7 @@ export default function Home() {
         <div className="absolute top-1/2 left-0 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-15"></div>
         <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
           <div className="text-center mb-14 md:mb-18 animate-fade-in-up">
-            <h2 className="text-5xl md:text-6xl font-black text-gray-900 tracking-tight">Naše lokalita</h2>
+            <h2 className="text-5xl md:text-6xl font-black text-gray-900 tracking-tight">Lokalita ucebny</h2>
             <div className="mx-auto mt-5 h-1.5 w-28 rounded-full bg-gradient-to-r from-blue-700 via-blue-500 to-red-600"></div>
           </div>
 

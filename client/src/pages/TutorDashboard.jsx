@@ -1113,8 +1113,8 @@ export default function TutorDashboard() {
 
       {resourceModalOpen && selectedLesson && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-br from-white via-slate-50 to-orange-50 rounded-2xl shadow-2xl w-full max-w-3xl p-6 border border-slate-200">
-            <div className="flex justify-between items-start gap-4 mb-6">
+          <div className="bg-gradient-to-br from-white via-slate-50 to-orange-50 rounded-2xl shadow-2xl w-full max-w-3xl border border-slate-200 max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex justify-between items-start gap-4 p-6 pb-4 shrink-0 border-b border-slate-200/70">
               <div>
                 <h2 className="text-2xl font-black text-slate-900">Správa lekce</h2>
                 <p className="text-slate-600 text-sm mt-1">
@@ -1129,10 +1129,17 @@ export default function TutorDashboard() {
                   <p className="text-slate-600 text-sm mt-2">{selectedLessonCleanDescription}</p>
                 )}
               </div>
-              <button onClick={closeResourceModal} className="text-slate-400 hover:text-slate-700 text-xl">✕</button>
+              <button
+                onClick={closeResourceModal}
+                className="text-slate-400 hover:text-slate-700 text-xl leading-none shrink-0"
+                aria-label="Zavřít správu lekce"
+              >
+                ✕
+              </button>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="overflow-y-auto px-6 py-4">
+              <div className="grid md:grid-cols-2 gap-6">
               <div className="border border-orange-200 bg-orange-50/50 rounded-xl p-4">
                 <h3 className="font-bold text-slate-900 mb-3">📤 Nahrát soubor</h3>
                 <input
@@ -1238,62 +1245,63 @@ export default function TutorDashboard() {
               </div>
             </div>
 
-            {editingAssignment && (
-              <div className="mt-6 border border-blue-200 bg-blue-50 rounded-xl p-4">
-                <h3 className="font-bold text-gray-900 mb-3">✏️ Upravit úkol</h3>
-                <input
-                  type="text"
-                  value={editingAssignment.title}
-                  onChange={(event) =>
-                    setEditingAssignment((prev) => ({ ...prev, title: event.target.value }))
-                  }
-                  className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm mb-2 bg-white focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
-                />
-                <textarea
-                  value={editingAssignment.description}
-                  onChange={(event) =>
-                    setEditingAssignment((prev) => ({ ...prev, description: event.target.value }))
-                  }
-                  className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm mb-2 min-h-[88px] bg-white focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
-                />
-                <input
-                  type="date"
-                  value={editingAssignment.due_date || ""}
-                  onChange={(event) =>
-                    setEditingAssignment((prev) => ({ ...prev, due_date: event.target.value }))
-                  }
-                  className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm mb-3 bg-white focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
-                />
-                <select
-                  value={editingAssignment.status || "probiha"}
-                  onChange={(event) =>
-                    setEditingAssignment((prev) => ({ ...prev, status: event.target.value }))
-                  }
-                  className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm mb-3 bg-white focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
-                >
-                  <option value="probiha">Probíhá</option>
-                  <option value="hotovo">Hotovo</option>
-                  <option value="dokonceno">Dokončeno</option>
-                </select>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleSaveEditedAssignment}
-                    disabled={saving}
-                    className="bg-blue-700 hover:bg-blue-800 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-semibold"
+              {editingAssignment && (
+                <div className="mt-6 border border-blue-200 bg-blue-50 rounded-xl p-4">
+                  <h3 className="font-bold text-gray-900 mb-3">✏️ Upravit úkol</h3>
+                  <input
+                    type="text"
+                    value={editingAssignment.title}
+                    onChange={(event) =>
+                      setEditingAssignment((prev) => ({ ...prev, title: event.target.value }))
+                    }
+                    className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm mb-2 bg-white focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
+                  />
+                  <textarea
+                    value={editingAssignment.description}
+                    onChange={(event) =>
+                      setEditingAssignment((prev) => ({ ...prev, description: event.target.value }))
+                    }
+                    className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm mb-2 min-h-[88px] bg-white focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
+                  />
+                  <input
+                    type="date"
+                    value={editingAssignment.due_date || ""}
+                    onChange={(event) =>
+                      setEditingAssignment((prev) => ({ ...prev, due_date: event.target.value }))
+                    }
+                    className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm mb-3 bg-white focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
+                  />
+                  <select
+                    value={editingAssignment.status || "probiha"}
+                    onChange={(event) =>
+                      setEditingAssignment((prev) => ({ ...prev, status: event.target.value }))
+                    }
+                    className="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm mb-3 bg-white focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
                   >
-                    Uložit změny
-                  </button>
-                  <button
-                    onClick={() => setEditingAssignment(null)}
-                    className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg font-semibold"
-                  >
-                    Zrušit úpravu
-                  </button>
+                    <option value="probiha">Probíhá</option>
+                    <option value="hotovo">Hotovo</option>
+                    <option value="dokonceno">Dokončeno</option>
+                  </select>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSaveEditedAssignment}
+                      disabled={saving}
+                      className="bg-blue-700 hover:bg-blue-800 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-semibold"
+                    >
+                      Uložit změny
+                    </button>
+                    <button
+                      onClick={() => setEditingAssignment(null)}
+                      className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg font-semibold"
+                    >
+                      Zrušit úpravu
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
-            <div className="mt-6 text-right">
+            <div className="p-6 pt-4 text-right border-t border-slate-200/70 shrink-0">
               <button onClick={closeResourceModal} className="btn-secondary">
                 Zavřít
               </button>
