@@ -327,6 +327,20 @@ const buildUserSessionPayload = (user) => ({
   },
 });
 
+const INVALID_CREDENTIALS_MESSAGE = "Email nebo heslo není správné";
+
+const normalizeLoginErrorMessage = (message) => {
+  const text = String(message || "").toLowerCase();
+  if (
+    /špatné heslo|spatne heslo|neplatné|neplatne|invalid|uživatel neexistuje|user not found|unauthorized|401|403/.test(
+      text
+    )
+  ) {
+    return INVALID_CREDENTIALS_MESSAGE;
+  }
+  return message || "Přihlášení selhalo";
+};
+
 // Auth endpoints (if using backend)
 export const loginUser = async (email, password) => {
   const normalizedEmail = (email || "").trim().toLowerCase();
@@ -341,14 +355,17 @@ export const loginUser = async (email, password) => {
     const data = await response.json().catch(() => null);
 
     if (response.ok) {
+      if (!data?.user || !data?.token) {
+        throw new Error("Neplatná odpověď serveru při přihlášení");
+      }
       return data;
     }
 
-    const backendMessage = data?.error || data?.message || "Přihlášení selhalo";
+    const backendMessage = data?.error || data?.message || INVALID_CREDENTIALS_MESSAGE;
     const fallbackAllowed = /neexistuje|špatné heslo|spoj|connect|timeout|enetunreach|econnrefused/i.test(backendMessage);
 
     if (!fallbackAllowed) {
-      throw new Error(backendMessage);
+      throw new Error(normalizeLoginErrorMessage(backendMessage));
     }
   } catch (error) {
     // Dev fallback: if backend DB connection is missing, allow login for local/demo users.
@@ -358,7 +375,7 @@ export const loginUser = async (email, password) => {
           return buildUserSessionPayload(DEMO_STUDENT_PROFILE);
         }
 
-        throw new Error(error.message || "Přihlášení selhalo");
+        throw new Error(normalizeLoginErrorMessage(error.message));
       }
 
       const result = await supabaseFetch(
@@ -371,7 +388,7 @@ export const loginUser = async (email, password) => {
           return buildUserSessionPayload(DEMO_STUDENT_PROFILE);
         }
 
-        throw new Error("Uživatel neexistuje");
+        throw new Error(INVALID_CREDENTIALS_MESSAGE);
       }
 
       const plainMatch = user.password_hash === password;
@@ -383,13 +400,13 @@ export const loginUser = async (email, password) => {
           return buildUserSessionPayload(DEMO_STUDENT_PROFILE);
         }
 
-        throw new Error("Špatné heslo");
+        throw new Error(INVALID_CREDENTIALS_MESSAGE);
       }
 
       return buildUserSessionPayload(user);
     } catch (fallbackError) {
       console.error("Error logging in:", error);
-      throw fallbackError;
+      throw new Error(normalizeLoginErrorMessage(fallbackError?.message));
     }
   }
 };
@@ -412,7 +429,7 @@ export const loginAdmin = async (email, password) => {
   // Zkusit přihlášení přes backend (pokud admin existuje v DB)
   try {
     const response = await loginUser(email, password);
-    if (response.user.role === 'admin') {
+    if (response?.user?.role === 'admin') {
       return response;
     }
     throw new Error('Nemáš oprávnění admina');
@@ -420,7 +437,7 @@ export const loginAdmin = async (email, password) => {
     // Fallback na lokální ověření pro vývojářské účely
     const normalizedEmail = (email || "").trim().toLowerCase();
     if (normalizedEmail !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
-      throw new Error("Neplatné přihlašovací údaje správce");
+      throw new Error(INVALID_CREDENTIALS_MESSAGE);
     }
 
     return {

@@ -24,6 +24,9 @@ export default function Login() {
       }
 
       const authData = await loginUser(formData.email, formData.password);
+      if (!authData?.user || !authData?.token) {
+        throw new Error("Email nebo heslo není správné");
+      }
       localStorage.setItem("user", JSON.stringify(authData.user));
       localStorage.setItem("authToken", authData.token);
 
