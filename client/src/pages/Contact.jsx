@@ -72,7 +72,7 @@ export default function Contact() {
           <div className="grid md:grid-cols-2 gap-12">
             {/* Contact Information */}
             <div className="animate-slide-in-left">
-              <h2 className="text-4xl font-bold text-gray-800 mb-8">Nás můžete kontaktovat</h2>
+              <h2 className="text-4xl font-bold text-gray-800 mb-8">Zde nás můžete kontaktovat</h2>
               
               <div className="space-y-8">
                 <div className="flex gap-4">
@@ -104,7 +104,7 @@ export default function Contact() {
               </div>
 
               <div className="mt-12 bg-blue-50 p-8 rounded-2xl border-l-4 border-blue-900 shadow-sm">
-                <p className="text-gray-600">Nejrychlejší odpověď získáte prostřednictvím e-mailu nebo kontaktního formuláře níže.</p>
+                <p className="text-gray-600">Nejrychlejší odpověď získáte prostřednictvím e-mailu nebo kontaktního formuláře.</p>
               </div>
             </div>
 
