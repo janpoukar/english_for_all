@@ -36,6 +36,11 @@ const getSupabaseRoleFromJwt = (jwt) => {
 const resolvedRole = getSupabaseRoleFromJwt(SUPABASE_KEY);
 console.log(`[SUPABASE] URL configured: ${Boolean(SUPABASE_URL)} | key role: ${resolvedRole}`);
 
+const getSupabaseDiagnostics = () => ({
+  urlConfigured: Boolean(SUPABASE_URL),
+  keyRole: resolvedRole,
+});
+
 const parseJsonResponse = async (response) => {
   const text = await response.text();
   if (!text) return null;
@@ -73,4 +78,4 @@ const supabaseFetch = async (endpoint, options = {}) => {
   return data;
 };
 
-module.exports = { supabaseFetch };
+module.exports = { supabaseFetch, getSupabaseDiagnostics };

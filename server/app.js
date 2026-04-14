@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const pool = require('./db');
+const { getSupabaseDiagnostics } = require('./supabase');
 
 const authRoutes = require('./Authroutes');
 const lessonRoutes = require('./leassonRoutes');
@@ -13,8 +15,22 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
+app.get('/api/health', async (req, res) => {
+  const supabase = getSupabaseDiagnostics();
+  let postgresReachable = false;
+
+  try {
+    await pool.query('SELECT 1');
+    postgresReachable = true;
+  } catch {
+    postgresReachable = false;
+  }
+
+  res.status(200).json({
+    status: 'ok',
+    supabase,
+    postgresReachable,
+  });
 });
 
 // API routes
