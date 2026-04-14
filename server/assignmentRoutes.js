@@ -213,9 +213,14 @@ router.patch('/:id', async (req, res) => {
   try {
     const { status, ...nonStatusUpdates } = updates;
     let updated = null;
+    const requestedNonStatusUpdate = Object.keys(nonStatusUpdates).length > 0;
 
-    if (Object.keys(nonStatusUpdates).length > 0) {
+    if (requestedNonStatusUpdate) {
       updated = await patchAssignmentByKnownIdColumns(id, nonStatusUpdates);
+
+      if (!updated) {
+        return res.status(404).json({ error: 'Úkol nebyl nalezen nebo nelze upravit' });
+      }
     }
 
     if (status !== undefined) {

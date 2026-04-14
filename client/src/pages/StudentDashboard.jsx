@@ -16,10 +16,26 @@ const splitLessonDescription = (rawDescription) => {
   const source = rawDescription || "";
   const markerIndex = source.indexOf(STUDENTS_META_PREFIX);
   if (markerIndex === -1) {
-    return { cleanDescription: source };
+    return { cleanDescription: source, students: [] };
   }
 
-  return { cleanDescription: source.slice(0, markerIndex).trim() };
+  const cleanDescription = source.slice(0, markerIndex).trim();
+  const encoded = source.slice(markerIndex + STUDENTS_META_PREFIX.length).trim();
+  if (!encoded) {
+    return { cleanDescription, students: [] };
+  }
+
+  const students = encoded
+    .split(";")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((item) => {
+      const [id, ...nameParts] = item.split("|");
+      return { id: id || "", name: (nameParts.join("|") || "").trim() };
+    })
+    .filter((student) => student.id || student.name);
+
+  return { cleanDescription, students };
 };
 
 export default function StudentDashboard() {
@@ -49,14 +65,37 @@ export default function StudentDashboard() {
     }
 
     setUser(parsedUser);
-    loadLessons();
+    loadLessons(parsedUser);
   }, [navigate]);
 
-  const loadLessons = async () => {
+  const loadLessons = async (currentUser) => {
     try {
       const data = await fetchLessons();
-      // Filtruj lekce které nejsou "free" (tj. jsou zarezervované pro studenty)
-      const studentLessons = data.filter(lesson => lesson.status !== "free");
+      const userId = String(currentUser?.id || "");
+      const userName = String(currentUser?.name || "").trim().toLowerCase();
+
+      const studentLessons = (Array.isArray(data) ? data : []).filter((lesson) => {
+        const parsed = splitLessonDescription(lesson?.description);
+        const assignedStudents = Array.isArray(parsed.students) ? parsed.students : [];
+        const hasAssignedStudents = assignedStudents.length > 0;
+
+        const isAssignedById = assignedStudents.some((student) => String(student.id || "") === userId);
+        const isAssignedByName =
+          userName.length > 0 &&
+          assignedStudents.some((student) => String(student.name || "").trim().toLowerCase() === userName);
+
+        if (isAssignedById || isAssignedByName) {
+          return true;
+        }
+
+        if (hasAssignedStudents) {
+          return false;
+        }
+
+        // Fallback for older lessons without student metadata.
+        return lesson.status !== "free";
+      });
+
       setLessons(studentLessons.sort((a, b) => new Date(a.date) - new Date(b.date)));
       setError("");
     } catch (err) {
