@@ -53,6 +53,15 @@ const SUPABASE_URL_CANDIDATES = [
 const SUPABASE_URL =
   SUPABASE_URL_CANDIDATES.map(normalizeSupabaseRestUrl).find(Boolean) || null;
 
+const SUPABASE_RESOLVED_HOST = (() => {
+  if (!SUPABASE_URL) return null;
+  try {
+    return new URL(SUPABASE_URL).hostname;
+  } catch {
+    return null;
+  }
+})();
+
 const pickFirstEnv = (keys) => {
   for (const key of keys) {
     const value = process.env[key];
@@ -105,6 +114,7 @@ console.log(
 const getSupabaseDiagnostics = () => ({
   urlConfigured: Boolean(SUPABASE_URL),
   urlSourceConfigured: Boolean(SUPABASE_URL_SOURCE),
+  resolvedHost: SUPABASE_RESOLVED_HOST,
   keyRole: resolvedRole,
   keyLength: SUPABASE_KEY ? SUPABASE_KEY.length : 0,
   envPresent: SUPABASE_ENV_PRESENT,
