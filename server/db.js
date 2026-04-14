@@ -7,6 +7,7 @@ if (typeof dns.setDefaultResultOrder === 'function') {
 }
 
 const useSsl = (process.env.DB_SSL || 'true') !== 'false';
+const enablePgSchemaInit = process.env.ENABLE_PG_SCHEMA_INIT === 'true';
 const pickFirstEnv = (keys) => {
   for (const key of keys) {
     const value = process.env[key];
@@ -159,7 +160,11 @@ const getDatabaseDiagnostics = () => ({
 });
 
 // Run schema initialization when module loads
-initializeSchema().catch(err => console.error('Failed to initialize schema:', err));
+if (enablePgSchemaInit) {
+  initializeSchema().catch(err => console.error('Failed to initialize schema:', err));
+} else {
+  console.log('Skipping DB schema initialization (ENABLE_PG_SCHEMA_INIT != true)');
+}
 
 module.exports = pool;
 module.exports.query = pgQuery;

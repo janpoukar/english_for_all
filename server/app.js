@@ -15,22 +15,26 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const enablePgHealthCheck = process.env.ENABLE_PG_HEALTH_CHECK === 'true';
+
 app.get('/api/health', async (req, res) => {
   const supabase = getSupabaseDiagnostics();
   const database = typeof pool.getDatabaseDiagnostics === 'function' ? pool.getDatabaseDiagnostics() : null;
-  let postgresReachable = false;
+  let postgresReachable = null;
   let postgresError = null;
 
-  try {
-    await pool.query('SELECT 1');
-    postgresReachable = true;
-  } catch (err) {
-    postgresReachable = false;
-    postgresError = err ? {
-      message: err.message || '',
-      code: err.code || null,
-      name: err.name || null,
-    } : null;
+  if (enablePgHealthCheck) {
+    try {
+      await pool.query('SELECT 1');
+      postgresReachable = true;
+    } catch (err) {
+      postgresReachable = false;
+      postgresError = err ? {
+        message: err.message || '',
+        code: err.code || null,
+        name: err.name || null,
+      } : null;
+    }
   }
 
   res.status(200).json({
