@@ -5,19 +5,6 @@ if (typeof dns.setDefaultResultOrder === 'function') {
   dns.setDefaultResultOrder('ipv4first');
 }
 
-const originalDnsLookup = dns.lookup.bind(dns);
-dns.lookup = (hostname, options, callback) => {
-  if (typeof options === 'function') {
-    return originalDnsLookup(hostname, { family: 4, all: false }, options);
-  }
-
-  if (options && typeof options === 'object') {
-    return originalDnsLookup(hostname, { ...options, family: 4, all: false }, callback);
-  }
-
-  return originalDnsLookup(hostname, { family: 4, all: false }, callback);
-};
-
 const useSsl = (process.env.DB_SSL || 'true') !== 'false';
 const connectionString = process.env.DATABASE_URL;
 
