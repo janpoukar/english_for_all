@@ -29,6 +29,24 @@ const connectionStringCandidate = pickFirstEnv([
 ]);
 const connectionString = connectionStringCandidate.value;
 
+const parseConnectionStringMeta = (value) => {
+  if (!value) {
+    return { host: null, port: null };
+  }
+
+  try {
+    const parsed = new URL(value);
+    return {
+      host: parsed.hostname || null,
+      port: parsed.port || null,
+    };
+  } catch {
+    return { host: null, port: null };
+  }
+};
+
+const connectionMeta = parseConnectionStringMeta(connectionString);
+
 const poolConfig = connectionString
   ? { connectionString }
   : {
@@ -118,6 +136,8 @@ const initializeSchema = async () => {
 const getDatabaseDiagnostics = () => ({
   connectionSource: connectionStringCandidate.key,
   hasConnectionString: Boolean(connectionString),
+  connectionHost: connectionMeta.host,
+  connectionPort: connectionMeta.port,
   lastPoolError,
 });
 
