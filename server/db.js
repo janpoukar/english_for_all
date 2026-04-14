@@ -27,7 +27,21 @@ const connectionStringCandidate = pickFirstEnv([
   'PG_CONNECTION_STRING',
   'PGDATABASE_URL',
 ]);
-const connectionString = connectionStringCandidate.value;
+const normalizeConnectionString = (value) => {
+  if (!value) return null;
+
+  try {
+    const parsed = new URL(value);
+    // Let node-postgres use explicit poolConfig.ssl instead of URL sslmode semantics.
+    parsed.searchParams.delete('sslmode');
+    parsed.searchParams.delete('uselibpqcompat');
+    return parsed.toString();
+  } catch {
+    return value;
+  }
+};
+
+const connectionString = normalizeConnectionString(connectionStringCandidate.value);
 
 const parseConnectionStringMeta = (value) => {
   if (!value) {
@@ -58,7 +72,9 @@ const poolConfig = connectionString
     };
 
 if (useSsl) {
-  poolConfig.ssl = { rejectUnauthorized: false };
+  poolConfig.ssl = {
+    rejectUnauthorized: false,
+  };
 }
 
 const forceIPv4Lookup = (hostname, options, callback) => {
