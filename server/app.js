@@ -4,6 +4,7 @@ const path = require('path');
 
 const authRoutes = require('./Authroutes');
 const lessonRoutes = require('./leassonRoutes');
+const assignmentRoutes = require('./assignmentRoutes');
 const materialsRoutes = require('./materialsRoutes');
 const newsletterRoutes = require('./newsletterRoutes');
 
@@ -19,6 +20,7 @@ app.get('/api/health', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/lessons', lessonRoutes);
+app.use('/api/assignments', assignmentRoutes);
 app.use('/api/materials', materialsRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 

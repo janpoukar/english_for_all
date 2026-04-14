@@ -253,7 +253,8 @@ export const getMaterialDownloadUrl = (materialId) => {
 // Assignments from Supabase
 export const fetchAssignments = async (lessonId) => {
   try {
-    return await supabaseFetch(`/assignments?lesson_id=eq.${lessonId}&order=created_at.desc`);
+    const response = await fetch(`${API_BASE}/assignments?lesson_id=${encodeURIComponent(lessonId)}`);
+    return await parseJsonResponse(response, "Nepodařilo se načíst úkoly");
   } catch (error) {
     console.error("Error fetching assignments:", error);
     throw error;
@@ -262,14 +263,14 @@ export const fetchAssignments = async (lessonId) => {
 
 export const createAssignment = async (assignmentData) => {
   try {
-    const result = await supabaseFetch("/assignments", {
+    const response = await fetch(`${API_BASE}/assignments`, {
       method: "POST",
       headers: {
-        "Prefer": "return=representation"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(assignmentData)
+      body: JSON.stringify(assignmentData),
     });
-    return Array.isArray(result) ? result[0] : result;
+    return await parseJsonResponse(response, "Nepodařilo se uložit úkol");
   } catch (error) {
     console.error("Error creating assignment:", error);
     throw error;
@@ -278,14 +279,14 @@ export const createAssignment = async (assignmentData) => {
 
 export const updateAssignment = async (id, updates) => {
   try {
-    const result = await supabaseFetch(`/assignments?id=eq.${id}`, {
+    const response = await fetch(`${API_BASE}/assignments/${encodeURIComponent(id)}`, {
       method: "PATCH",
       headers: {
-        "Prefer": "return=representation"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(updates)
+      body: JSON.stringify(updates),
     });
-    return Array.isArray(result) ? result[0] : result;
+    return await parseJsonResponse(response, "Nepodařilo se upravit úkol");
   } catch (error) {
     console.error("Error updating assignment:", error);
     throw error;
