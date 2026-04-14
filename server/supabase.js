@@ -156,7 +156,8 @@ const buildServiceRoleToken = () => {
 };
 
 const SUPABASE_AUTH = buildServiceRoleToken();
-const SUPABASE_KEY = SUPABASE_AUTH.token || SUPABASE_ANON_KEY;
+const SUPABASE_API_KEY = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY || null;
+const SUPABASE_AUTH_TOKEN = SUPABASE_AUTH.token || SUPABASE_API_KEY;
 
 const SUPABASE_ENV_PRESENT = {
   SUPABASE_URL: Boolean(process.env.SUPABASE_URL),
@@ -186,9 +187,10 @@ const getSupabaseRoleFromJwt = (jwt) => {
   }
 };
 
-const resolvedRole = getSupabaseRoleFromJwt(SUPABASE_KEY);
+const resolvedRole = getSupabaseRoleFromJwt(SUPABASE_API_KEY);
+const resolvedAuthRole = getSupabaseRoleFromJwt(SUPABASE_AUTH_TOKEN);
 console.log(
-  `[SUPABASE] URL configured: ${Boolean(SUPABASE_URL)} | url source: ${SUPABASE_URL_SOURCE ? 'set' : 'missing'} | auth source: ${SUPABASE_AUTH.source} | key role: ${resolvedRole} | env present: ${JSON.stringify(SUPABASE_ENV_PRESENT)}`
+  `[SUPABASE] URL configured: ${Boolean(SUPABASE_URL)} | url source: ${SUPABASE_URL_SOURCE ? 'set' : 'missing'} | auth source: ${SUPABASE_AUTH.source} | api role: ${resolvedRole} | auth role: ${resolvedAuthRole} | env present: ${JSON.stringify(SUPABASE_ENV_PRESENT)}`
 );
 
 const getSupabaseDiagnostics = () => ({
@@ -197,7 +199,9 @@ const getSupabaseDiagnostics = () => ({
   resolvedHost: SUPABASE_RESOLVED_HOST,
   authSource: SUPABASE_AUTH.source,
   keyRole: resolvedRole,
-  keyLength: SUPABASE_KEY ? SUPABASE_KEY.length : 0,
+  authRole: resolvedAuthRole,
+  keyLength: SUPABASE_API_KEY ? SUPABASE_API_KEY.length : 0,
+  authLength: SUPABASE_AUTH_TOKEN ? SUPABASE_AUTH_TOKEN.length : 0,
   envPresent: SUPABASE_ENV_PRESENT,
 });
 
@@ -212,7 +216,7 @@ const parseJsonResponse = async (response) => {
 };
 
 const supabaseFetch = async (endpoint, options = {}) => {
-  if (SUPABASE_URL_OPTIONS.length === 0 || !SUPABASE_KEY) {
+  if (SUPABASE_URL_OPTIONS.length === 0 || !SUPABASE_API_KEY || !SUPABASE_AUTH_TOKEN) {
     throw new Error('Chybí Supabase konfigurace na serveru (SUPABASE_URL a service nebo anon klíč / JWT secret)');
   }
 
@@ -230,8 +234,8 @@ const supabaseFetch = async (endpoint, options = {}) => {
     attemptedHosts.push(host);
     const url = `${baseUrl}/rest/v1${endpoint}`;
     const headers = {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
+      apikey: SUPABASE_API_KEY,
+      Authorization: `Bearer ${SUPABASE_AUTH_TOKEN}`,
       ...options.headers,
     };
 
