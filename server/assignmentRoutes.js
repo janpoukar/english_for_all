@@ -32,6 +32,8 @@ const normalizeStatus = (value) => {
   return 'probiha';
 };
 
+const normalizeText = (value) => String(value || '').trim().toLowerCase();
+
 const patchAssignmentByKnownIdColumns = async (id, updates) => {
   const idColumns = ['id', 'assignment_id', 'task_id'];
 
@@ -79,7 +81,8 @@ const fetchAssignmentByKnownIdColumns = async (id) => {
 
 const findAssignmentByOriginalPayload = async (original) => {
   const lessonId = original?.lesson_id;
-  const originalTitle = String(original?.title || '').trim();
+  const originalTitle = normalizeText(original?.title);
+  const originalDueDate = String(original?.due_date || '').trim();
   if (!lessonId || !originalTitle) {
     return null;
   }
@@ -89,7 +92,49 @@ const findAssignmentByOriginalPayload = async (original) => {
     return null;
   }
 
-  return result.find((item) => String(item?.title || '').trim() === originalTitle) || null;
+  const exactTitle = result.find((item) => normalizeText(item?.title) === originalTitle);
+  if (exactTitle) {
+    return exactTitle;
+  }
+
+  if (originalDueDate) {
+    const byDueDate = result.find((item) => String(item?.due_date || '').trim() === originalDueDate);
+    if (byDueDate) {
+      return byDueDate;
+    }
+  }
+
+  return null;
+};
+
+const patchAssignmentByOriginalPayload = async (original, updates) => {
+  const lessonId = String(original?.lesson_id || '').trim();
+  const originalTitle = String(original?.title || '').trim();
+  if (!lessonId || !originalTitle) {
+    return null;
+  }
+
+  try {
+    const result = await supabaseFetch(
+      `/assignments?lesson_id=eq.${encodeURIComponent(lessonId)}&title=eq.${encodeURIComponent(originalTitle)}`,
+      {
+        method: 'PATCH',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify(updates),
+      }
+    );
+
+    if (Array.isArray(result) && result.length > 0) {
+      return result[0];
+    }
+  } catch (err) {
+    if (isMissingColumnError(err, 'status')) {
+      return null;
+    }
+    throw err;
+  }
+
+  return null;
 };
 
 router.get('/', async (req, res) => {
@@ -188,7 +233,14 @@ router.patch('/:id', async (req, res) => {
 
   for (const key of ['title', 'description', 'due_date', 'status']) {
     if (req.body?.[key] !== undefined) {
-      updates[key] = key === 'status' ? normalizeStatus(req.body[key]) : req.body[key];
+      if (key === 'status') {
+        updates[key] = normalizeStatus(req.body[key]);
+      } else if (key === 'title' || key === 'description') {
+        const value = req.body[key];
+        updates[key] = value === null ? null : String(value).trim();
+      } else {
+        updates[key] = req.body[key];
+      }
     }
   }
 
@@ -199,16 +251,26 @@ router.patch('/:id', async (req, res) => {
   try {
     const { status, ...nonStatusUpdates } = updates;
     let updated = null;
+    let updateAttempted = false;
     const requestedNonStatusUpdate = Object.keys(nonStatusUpdates).length > 0;
+    let targetAssignment = await fetchAssignmentByKnownIdColumns(id);
+
+    if (!targetAssignment && original) {
+      targetAssignment = await findAssignmentByOriginalPayload(original);
+    }
 
     if (requestedNonStatusUpdate) {
+      updateAttempted = true;
       updated = await patchAssignmentByKnownIdColumns(id, nonStatusUpdates);
 
+      const targetId = getAssignmentId(targetAssignment);
+      if (!updated && targetId) {
+        updated = await patchAssignmentByKnownIdColumns(targetId, nonStatusUpdates);
+      }
+
       if (!updated && original) {
-        const originalMatch = await findAssignmentByOriginalPayload(original);
-        const originalMatchId = getAssignmentId(originalMatch);
-        if (originalMatchId) {
-          updated = await patchAssignmentByKnownIdColumns(originalMatchId, nonStatusUpdates);
+        if (!updated) {
+          updated = await patchAssignmentByOriginalPayload(original, nonStatusUpdates);
         }
       }
     }
@@ -217,20 +279,27 @@ router.patch('/:id', async (req, res) => {
       const normalizedStatus = normalizeStatus(status);
 
       try {
+        updateAttempted = true;
         const statusUpdateResult = await patchAssignmentByKnownIdColumns(id, { status: normalizedStatus });
         if (statusUpdateResult) {
           updated = statusUpdateResult;
         }
 
+        const targetId = getAssignmentId(targetAssignment);
+        if (!statusUpdateResult && targetId) {
+          const fallbackByTargetId = await patchAssignmentByKnownIdColumns(targetId, { status: normalizedStatus });
+          if (fallbackByTargetId) {
+            updated = fallbackByTargetId;
+          }
+        }
+
         if (!statusUpdateResult && original) {
-          const originalMatch = await findAssignmentByOriginalPayload(original);
-          const originalMatchId = getAssignmentId(originalMatch);
-          if (originalMatchId) {
-            const fallbackStatusResult = await patchAssignmentByKnownIdColumns(originalMatchId, {
+          if (!updated) {
+            const fallbackByOriginal = await patchAssignmentByOriginalPayload(original, {
               status: normalizedStatus,
             });
-            if (fallbackStatusResult) {
-              updated = fallbackStatusResult;
+            if (fallbackByOriginal) {
+              updated = fallbackByOriginal;
             }
           }
         }
@@ -240,6 +309,10 @@ router.patch('/:id', async (req, res) => {
         }
       }
 
+    }
+
+    if (!updated && targetAssignment) {
+      updated = targetAssignment;
     }
 
     if (!updated) {
@@ -254,14 +327,36 @@ router.patch('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Úkol nebyl nalezen nebo nelze upravit' });
     }
 
-    const merged = {
-      ...updated,
-      ...nonStatusUpdates,
-      ...(status !== undefined ? { status } : {}),
-      status: (status !== undefined ? status : updated.status) || 'probiha',
-    };
+    const persistedId = getAssignmentId(updated);
+    let persisted = updated;
+    if (persistedId) {
+      const refetched = await fetchAssignmentByKnownIdColumns(persistedId);
+      if (refetched) {
+        persisted = refetched;
+      }
+    }
 
-    res.json(merged);
+    if (requestedNonStatusUpdate && updateAttempted) {
+      const requestedDescription = nonStatusUpdates.description;
+      if (requestedDescription !== undefined) {
+        const persistedDescription =
+          persisted.description === null || persisted.description === undefined
+            ? null
+            : String(persisted.description).trim();
+        const expectedDescription = requestedDescription === null ? null : String(requestedDescription).trim();
+
+        if (persistedDescription !== expectedDescription) {
+          return res.status(409).json({
+            error: 'Úprava komentáře se neuložila v databázi. Zkus to prosím znovu.',
+          });
+        }
+      }
+    }
+
+    res.json({
+      ...persisted,
+      status: persisted?.status || 'probiha',
+    });
   } catch (err) {
     console.error('[ASSIGNMENTS] Update error:', err.message, err.code);
     res.status(500).json({ error: `Chyba při úpravě úkolu: ${err.message}` });
