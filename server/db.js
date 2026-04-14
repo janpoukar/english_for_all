@@ -67,6 +67,31 @@ console.log(`[PG] connection source: ${connectionStringCandidate.key || 'none'} 
 
 let lastPoolError = null;
 
+const withIPv4Dns = async (operation) => {
+  const originalLookup = dns.lookup;
+  dns.lookup = (hostname, options, callback) => {
+    if (typeof options === 'function') {
+      return originalLookup(hostname, { family: 4, all: false }, options);
+    }
+
+    if (options && typeof options === 'object') {
+      return originalLookup(hostname, { ...options, family: 4, all: false }, callback);
+    }
+
+    return originalLookup(hostname, { family: 4, all: false }, callback);
+  };
+
+  try {
+    return await operation();
+  } finally {
+    dns.lookup = originalLookup;
+  }
+};
+
+const pgQuery = (...args) => withIPv4Dns(() => pool.query(...args));
+const pgConnect = (...args) => withIPv4Dns(() => pool.connect(...args));
+const pgEnd = (...args) => pool.end(...args);
+
 // Better error handling
 pool.on('error', (err) => {
   lastPoolError = err ? {
@@ -83,7 +108,7 @@ const initializeSchema = async () => {
     console.log('Initializing database schema...');
 
     // Create materials table if it doesn't exist
-    await pool.query(`
+    await pgQuery(`
       CREATE TABLE IF NOT EXISTS materials (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         lesson_id UUID NOT NULL,
@@ -95,7 +120,7 @@ const initializeSchema = async () => {
     `);
 
     // Create index for faster lesson_id lookups
-    await pool.query(`
+    await pgQuery(`
       CREATE INDEX IF NOT EXISTS idx_materials_lesson_id 
       ON materials(lesson_id);
     `);
@@ -116,4 +141,7 @@ const getDatabaseDiagnostics = () => ({
 initializeSchema().catch(err => console.error('Failed to initialize schema:', err));
 
 module.exports = pool;
+module.exports.query = pgQuery;
+module.exports.connect = pgConnect;
+module.exports.end = pgEnd;
 module.exports.getDatabaseDiagnostics = getDatabaseDiagnostics;
