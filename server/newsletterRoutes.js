@@ -1,4 +1,6 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const authRoutes = require('./Authroutes');
 const nodemailer = require('nodemailer');
 const { supabaseFetch } = require('./supabase');
@@ -10,6 +12,57 @@ const DEFAULT_SETTINGS = {
   title: 'Přihlaste se k Newsletteru',
   subtitle: 'Dostávejte aktuální tipy na učení angličtiny a nové kurzy',
   buttonText: 'Přihlásit',
+};
+
+const DATA_DIR = path.join(__dirname, 'data');
+const NEWSLETTER_STORE_PATH = path.join(DATA_DIR, 'newsletter.json');
+
+const ensureStore = () => {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+
+  if (!fs.existsSync(NEWSLETTER_STORE_PATH)) {
+    fs.writeFileSync(
+      NEWSLETTER_STORE_PATH,
+      JSON.stringify(
+        {
+          settings: DEFAULT_SETTINGS,
+          subscribers: [],
+          campaigns: [],
+        },
+        null,
+        2
+      )
+    );
+  }
+};
+
+const readStore = () => {
+  ensureStore();
+  try {
+    const raw = fs.readFileSync(NEWSLETTER_STORE_PATH, 'utf8');
+    const parsed = JSON.parse(raw);
+    return {
+      settings: {
+        ...DEFAULT_SETTINGS,
+        ...(parsed.settings || {}),
+      },
+      subscribers: Array.isArray(parsed.subscribers) ? parsed.subscribers : [],
+      campaigns: Array.isArray(parsed.campaigns) ? parsed.campaigns : [],
+    };
+  } catch {
+    return {
+      settings: DEFAULT_SETTINGS,
+      subscribers: [],
+      campaigns: [],
+    };
+  }
+};
+
+const writeStore = (store) => {
+  ensureStore();
+  fs.writeFileSync(NEWSLETTER_STORE_PATH, JSON.stringify(store, null, 2));
 };
 
 const sanitizeUrl = (value) => {
@@ -94,19 +147,7 @@ const buildNewsletterHtml = ({ subject, preheader, imageUrl, imageAlt, body, cta
 };
 
 async function getSettingsRow() {
-  const result = await supabaseFetch('/newsletter_settings?id=eq.1&limit=1');
-
-  if (Array.isArray(result) && result.length > 0) {
-    return result[0];
-  }
-
-  const inserted = await supabaseFetch('/newsletter_settings', {
-    method: 'POST',
-    headers: { Prefer: 'return=representation' },
-    body: JSON.stringify({ id: 1, title: DEFAULT_SETTINGS.title, subtitle: DEFAULT_SETTINGS.subtitle, button_text: DEFAULT_SETTINGS.buttonText }),
-  });
-
-  return Array.isArray(inserted) ? inserted[0] : inserted;
+  return readStore().settings;
 }
 
 router.get('/settings', async (req, res) => {
@@ -115,11 +156,11 @@ router.get('/settings', async (req, res) => {
     res.json({
       title: row.title,
       subtitle: row.subtitle,
-      buttonText: row.button_text,
+      buttonText: row.buttonText || row.button_text,
     });
   } catch (err) {
     console.error('Fetch newsletter settings error:', err);
-    res.status(500).json({ error: 'Nepodařilo se načíst newsletter nastavení' });
+    res.json(DEFAULT_SETTINGS);
   }
 });
 
@@ -133,20 +174,15 @@ router.put('/settings', verifyAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Vyplň prosím všechna newsletter pole' });
     }
 
-    const result = await pool.query(
-      `INSERT INTO newsletter_settings (id, title, subtitle, button_text, updated_at)
-       VALUES (1, $1, $2, $3, NOW())
-       ON CONFLICT (id)
-       DO UPDATE SET title = EXCLUDED.title, subtitle = EXCLUDED.subtitle, button_text = EXCLUDED.button_text, updated_at = NOW()
-       RETURNING *`,
-      [title, subtitle, buttonText]
-    );
+    const store = readStore();
+    store.settings = { title, subtitle, buttonText };
+    writeStore(store);
 
-    const row = result.rows[0];
+    const row = store.settings;
     res.json({
       title: row.title,
       subtitle: row.subtitle,
-      buttonText: row.button_text,
+      buttonText: row.buttonText,
     });
   } catch (err) {
     console.error('Save newsletter settings error:', err);
@@ -162,11 +198,15 @@ router.post('/subscribe', async (req, res) => {
       return res.status(400).json({ error: 'Vyplň prosím email' });
     }
 
-    await supabaseFetch('/newsletter_subscribers', {
-      method: 'POST',
-      headers: { Prefer: 'return=representation' },
-      body: JSON.stringify({ email }),
-    });
+    const store = readStore();
+    if (!store.subscribers.some((item) => item.email === email)) {
+      store.subscribers.unshift({
+        id: Date.now(),
+        email,
+        created_at: new Date().toISOString(),
+      });
+      writeStore(store);
+    }
 
     res.json({ success: true, message: 'Děkujeme za přihlášení k newsletteru.' });
   } catch (err) {
@@ -177,8 +217,8 @@ router.post('/subscribe', async (req, res) => {
 
 router.get('/subscribers', verifyAdmin, async (req, res) => {
   try {
-    const result = await supabaseFetch('/newsletter_subscribers?select=id,email,created_at&order=created_at.desc');
-    res.json(Array.isArray(result) ? result : []);
+    const store = readStore();
+    res.json(store.subscribers);
   } catch (err) {
     console.error('Newsletter subscribers error:', err);
     res.status(500).json({ error: 'Nepodařilo se načíst odběratele' });
@@ -231,11 +271,15 @@ router.post('/send', verifyAdmin, async (req, res) => {
       }
     }
 
-    await supabaseFetch('/newsletter_campaigns', {
-      method: 'POST',
-      headers: { Prefer: 'return=representation' },
-      body: JSON.stringify({ subject, body, subscriber_count: recipients.length }),
+    const store = readStore();
+    store.campaigns.unshift({
+      id: Date.now(),
+      subject,
+      body,
+      subscriber_count: recipients.length,
+      created_at: new Date().toISOString(),
     });
+    writeStore(store);
 
     res.json({
       success: true,
