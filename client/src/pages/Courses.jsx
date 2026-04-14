@@ -26,18 +26,18 @@ export default function Courses() {
       features: ["Nuancované vyjadřování", "Odborné texty", "Kulturní kontexty", "Výtvarné psaní"]
     },
     {
-      imageSrc: "/pictures/graduation.png",
+      imageSrc: "/pictures/maturita.jpg",
       imageAlt: "Příprava k maturitě",
       title: "Příprava k maturitě",
       description: "Cílená příprava na maturitní zkoušku z angličtiny včetně modelových úloh.",
       features: ["Poslech", "Čtení s porozuměním", "Psaní", "Ústní část a modelové otázky"]
     },
     {
-      imageSrc: "/pictures/fce.png",
+      imageSrc: "/pictures/priprava_na_testy.png",
       imageAlt: "Příprava na jazykové testy",
-      title: "Příprava testů (TOEFL, IELTS)",
-      description: "Intenzivní příprava k mezinárodním testům s garantovanými výsledky.",
-      features: ["Strategie testů", "Praxe se starými testy", "Časové management", "Mock zkoušky"]
+      title: "Příprava na testy (FCE, TOEFL, IELTS)",
+      description: "Intenzivní příprava k mezinárodním testům s důrazem na FCE a další zkoušky.",
+      features: ["FCE strategie", "Praxe se starými testy", "Časový management", "Mock zkoušky"]
     },
     {
       imageSrc: "/pictures/doucovani.png",

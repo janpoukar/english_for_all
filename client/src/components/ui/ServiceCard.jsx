@@ -5,17 +5,16 @@ export default function ServiceCard({ icon, imageSrc, imageAlt, title, descripti
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-700 via-red-600 to-orange-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
       
       <div className="p-8">
-        <div className="flex items-start justify-between mb-6">
+        <div className="flex items-center justify-center mb-6">
           {imageSrc ? (
-            <div className="w-20 h-20 md:w-24 md:h-24 p-2 bg-gradient-to-br from-blue-100 to-red-100 rounded-2xl shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all duration-300 group-hover:from-blue-200 group-hover:to-red-200 overflow-hidden flex items-center justify-center">
-              <img src={imageSrc} alt={imageAlt || title} className="w-full h-full object-contain" loading="lazy" />
+            <div className="w-28 h-28 md:w-32 md:h-32 p-2 bg-gradient-to-br from-blue-100 to-red-100 rounded-2xl shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all duration-300 group-hover:from-blue-200 group-hover:to-red-200 overflow-hidden flex items-center justify-center mx-auto">
+              <img src={imageSrc} alt={imageAlt || title} className="w-full h-full object-cover rounded-xl" loading="lazy" />
             </div>
           ) : (
-            <div className="text-6xl p-4 bg-gradient-to-br from-blue-100 to-red-100 rounded-2xl shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all duration-300 group-hover:from-blue-200 group-hover:to-red-200">
+            <div className="text-6xl p-4 bg-gradient-to-br from-blue-100 to-red-100 rounded-2xl shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all duration-300 group-hover:from-blue-200 group-hover:to-red-200 mx-auto">
               {icon}
             </div>
           )}
-          <div className="text-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300">→</div>
         </div>
         
         <h3 className="text-2xl font-bold text-gray-900 mb-4 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-blue-700 group-hover:to-red-600 group-hover:bg-clip-text transition-all duration-300">
