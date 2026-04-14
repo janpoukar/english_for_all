@@ -1,7 +1,45 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const { supabaseFetch } = require('./supabase');
 
 const router = express.Router();
+
+const DATA_DIR = path.join(__dirname, 'data');
+const ASSIGNMENT_STATUS_STORE_PATH = path.join(DATA_DIR, 'assignment-status.json');
+
+const ensureStatusStore = () => {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+
+  if (!fs.existsSync(ASSIGNMENT_STATUS_STORE_PATH)) {
+    fs.writeFileSync(ASSIGNMENT_STATUS_STORE_PATH, JSON.stringify({ statuses: {} }, null, 2));
+  }
+};
+
+const readStatusStore = () => {
+  ensureStatusStore();
+  try {
+    const parsed = JSON.parse(fs.readFileSync(ASSIGNMENT_STATUS_STORE_PATH, 'utf8'));
+    return parsed && typeof parsed === 'object' ? parsed : { statuses: {} };
+  } catch {
+    return { statuses: {} };
+  }
+};
+
+const writeStatusStore = (store) => {
+  ensureStatusStore();
+  fs.writeFileSync(ASSIGNMENT_STATUS_STORE_PATH, JSON.stringify(store, null, 2));
+};
+
+const getAssignmentId = (assignment) =>
+  assignment?.id || assignment?.assignment_id || assignment?.task_id || null;
+
+const isMissingColumnError = (err, columnName) => {
+  const message = String(err?.message || '').toLowerCase();
+  return message.includes('column') && message.includes(String(columnName || '').toLowerCase());
+};
 
 const normalizeStatus = (value) => {
   const normalized = String(value || '').trim().toLowerCase();
@@ -37,6 +75,39 @@ const patchAssignmentByKnownIdColumns = async (id, updates) => {
   return null;
 };
 
+const fetchAssignmentByKnownIdColumns = async (id) => {
+  const idColumns = ['id', 'assignment_id', 'task_id'];
+
+  for (const idColumn of idColumns) {
+    try {
+      const result = await supabaseFetch(`/assignments?${idColumn}=eq.${encodeURIComponent(id)}&limit=1`);
+      if (Array.isArray(result) && result.length > 0) {
+        return result[0];
+      }
+    } catch (err) {
+      if (isMissingColumnError(err, idColumn)) {
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  return null;
+};
+
+const mergeStatusFallback = (assignment) => {
+  if (!assignment) return assignment;
+
+  const assignmentId = getAssignmentId(assignment);
+  const statusStore = readStatusStore();
+  const storedStatus = assignmentId ? statusStore.statuses?.[assignmentId] : null;
+
+  return {
+    ...assignment,
+    status: assignment.status || storedStatus || 'probiha',
+  };
+};
+
 router.get('/', async (req, res) => {
   const { lesson_id: lessonId } = req.query;
 
@@ -58,7 +129,8 @@ router.get('/', async (req, res) => {
       result = await supabaseFetch(`/assignments?lesson_id=eq.${encodeURIComponent(lessonId)}`);
     }
 
-    res.json(Array.isArray(result) ? result : []);
+    const normalized = (Array.isArray(result) ? result : []).map(mergeStatusFallback);
+    res.json(normalized);
   } catch (err) {
     console.error('[ASSIGNMENTS] Fetch error:', err.message, err.code);
     res.status(500).json({ error: `Chyba při načítání úkolů: ${err.message}` });
@@ -108,7 +180,16 @@ router.post('/', async (req, res) => {
       });
     }
 
-    res.status(201).json(Array.isArray(result) ? result[0] : result);
+    const created = Array.isArray(result) ? result[0] : result;
+    const createdId = getAssignmentId(created);
+
+    if (createdId && status) {
+      const statusStore = readStatusStore();
+      statusStore.statuses[createdId] = normalizeStatus(status);
+      writeStatusStore(statusStore);
+    }
+
+    res.status(201).json(mergeStatusFallback(created));
   } catch (err) {
     console.error('[ASSIGNMENTS] Create error:', err.message, err.code);
     res.status(500).json({ error: `Chyba při ukládání úkolu: ${err.message}` });
@@ -130,20 +211,43 @@ router.patch('/:id', async (req, res) => {
   }
 
   try {
-    let updated = await patchAssignmentByKnownIdColumns(id, updates);
+    const { status, ...nonStatusUpdates } = updates;
+    let updated = null;
 
-    if (!updated && updates.status) {
-      const { status: _ignored, ...withoutStatus } = updates;
-      if (Object.keys(withoutStatus).length > 0) {
-        updated = await patchAssignmentByKnownIdColumns(id, withoutStatus);
+    if (Object.keys(nonStatusUpdates).length > 0) {
+      updated = await patchAssignmentByKnownIdColumns(id, nonStatusUpdates);
+    }
+
+    if (status !== undefined) {
+      const normalizedStatus = normalizeStatus(status);
+
+      try {
+        const statusUpdateResult = await patchAssignmentByKnownIdColumns(id, { status: normalizedStatus });
+        if (statusUpdateResult) {
+          updated = statusUpdateResult;
+        }
+      } catch (statusErr) {
+        if (!isMissingColumnError(statusErr, 'status')) {
+          throw statusErr;
+        }
       }
+
+      const assignmentRef = updated || (await fetchAssignmentByKnownIdColumns(id));
+      const assignmentId = getAssignmentId(assignmentRef) || id;
+      const statusStore = readStatusStore();
+      statusStore.statuses[assignmentId] = normalizedStatus;
+      writeStatusStore(statusStore);
+    }
+
+    if (!updated) {
+      updated = await fetchAssignmentByKnownIdColumns(id);
     }
 
     if (!updated) {
       return res.status(404).json({ error: 'Úkol nebyl nalezen' });
     }
 
-    res.json(updated);
+    res.json(mergeStatusFallback(updated));
   } catch (err) {
     console.error('[ASSIGNMENTS] Update error:', err.message, err.code);
     res.status(500).json({ error: `Chyba při úpravě úkolu: ${err.message}` });
