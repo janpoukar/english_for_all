@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import {
   createAssignment,
   createLesson,
+  deleteMaterial,
   deleteLesson,
   fetchAssignments,
   fetchLessons,
   fetchMaterials,
   fetchUsers,
-  resolveFileUrl,
   updateAssignment,
   updateLesson,
   uploadMaterial,
@@ -652,6 +652,24 @@ export default function TutorDashboard() {
     }
   };
 
+  const handleDeleteMaterial = async (material) => {
+    if (!selectedLesson || !material?.id) return;
+
+    const confirmed = window.confirm(`Opravdu chceš odstranit materiál \"${material.file_name || "Materiál"}\"?`);
+    if (!confirmed) return;
+
+    setSaving(true);
+    try {
+      await deleteMaterial(material.id);
+      await loadMaterialsForLesson(selectedLesson.id);
+      alert("Materiál byl odstraněn.");
+    } catch (err) {
+      alert("Chyba při mazání materiálu: " + (err?.message || "neznámá chyba"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleCreateAssignment = async () => {
     if (!selectedLesson) return;
     if (!assignmentTitle.trim()) {
@@ -1164,8 +1182,16 @@ export default function TutorDashboard() {
                   ) : (
                     <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
                       {materials.map((material) => (
-                        <div key={material.id} className="border border-orange-200 rounded-lg p-2 bg-white">
-                          <p className="text-sm font-semibold text-gray-900">{material.file_name || "Materiál"}</p>
+                        <div key={material.id} className="border border-orange-200 rounded-lg p-2 bg-white flex items-center justify-between gap-2">
+                          <p className="text-sm font-semibold text-gray-900 break-all">{material.file_name || "Materiál"}</p>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteMaterial(material)}
+                            disabled={saving}
+                            className="text-xs font-semibold text-red-700 hover:text-red-800 disabled:opacity-50 shrink-0"
+                          >
+                            Smazat
+                          </button>
                         </div>
                       ))}
                     </div>

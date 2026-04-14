@@ -238,6 +238,23 @@ export const uploadMaterial = async (payload) => {
   }
 };
 
+export const deleteMaterial = async (materialId) => {
+  try {
+    if (!materialId) {
+      throw new Error("Chybí ID materiálu");
+    }
+
+    const response = await fetch(`${API_BASE}/materials/${encodeURIComponent(materialId)}`, {
+      method: "DELETE",
+    });
+
+    return await parseJsonResponse(response, "Nepodařilo se smazat materiál");
+  } catch (error) {
+    console.error("Error deleting material:", error);
+    throw new Error(`Chyba při mazání materiálu: ${error?.message || "neznámá chyba"}`);
+  }
+};
+
 export const resolveFileUrl = (fileUrl) => {
   if (!fileUrl) return "";
   if (/^https?:\/\//i.test(fileUrl)) return fileUrl;

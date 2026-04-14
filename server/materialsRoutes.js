@@ -163,6 +163,41 @@ router.post('/', upload.single('file'), async (req, res) => {
   }
 });
 
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await supabaseFetch(`/materials?id=eq.${encodeURIComponent(id)}&select=id,file_url&limit=1`);
+    const material = Array.isArray(result) ? result[0] : null;
+
+    if (!material) {
+      return res.status(404).json({ error: 'Materiál nebyl nalezen' });
+    }
+
+    const storagePath = extractStoragePath(material.file_url);
+
+    if (storagePath && supabase) {
+      const { error: removeError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .remove([storagePath]);
+
+      // If file is already missing in storage, still remove DB record.
+      if (removeError) {
+        console.warn('[MATERIALS] Storage remove warning:', removeError.message);
+      }
+    }
+
+    await supabaseFetch(`/materials?id=eq.${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('[MATERIALS] Delete material error:', err.message, err.code);
+    return res.status(500).json({ error: `Chyba při mazání materiálu: ${err.message}` });
+  }
+});
+
 router.get('/:id/download', async (req, res) => {
   const { id } = req.params;
 
