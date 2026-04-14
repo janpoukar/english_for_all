@@ -42,6 +42,40 @@ const normalizeSupabaseRestUrl = (value) => {
   return null;
 };
 
+const expandSupabaseRestUrlCandidates = (value) => {
+  const raw = String(value || '').trim();
+  if (!raw || /^postgres(?:ql)?:\/\//i.test(raw)) {
+    return [];
+  }
+
+  const candidates = [];
+
+  const tryAdd = (candidate) => {
+    const normalized = normalizeSupabaseRestUrl(candidate);
+    if (normalized && !candidates.includes(normalized)) {
+      candidates.push(normalized);
+    }
+  };
+
+  tryAdd(raw);
+  tryAdd(raw.replace(/^\/+/, ''));
+
+  try {
+    const parsed = new URL(raw.includes('://') ? raw : `https://${raw.replace(/^\/+/, '')}`);
+    const hostname = String(parsed.hostname || '').toLowerCase();
+    if (/^db\.[^.]+\.supabase\.co$/.test(hostname)) {
+      const projectRef = hostname.split('.')[1];
+      if (projectRef) {
+        tryAdd(`https://${projectRef}.supabase.co`);
+      }
+    }
+  } catch {
+    // Ignore malformed candidates and fall back to the normalized list above.
+  }
+
+  return candidates;
+};
+
 const SUPABASE_URL_CANDIDATES = [
   process.env.SUPABASE_PROJECT_URL,
   process.env.SUPABASE_URL,
@@ -50,8 +84,11 @@ const SUPABASE_URL_CANDIDATES = [
   .map((value) => String(value || '').trim())
   .filter(Boolean);
 
-const SUPABASE_URL =
-  SUPABASE_URL_CANDIDATES.map(normalizeSupabaseRestUrl).find(Boolean) || null;
+const SUPABASE_URL_OPTIONS = Array.from(
+  new Set(SUPABASE_URL_CANDIDATES.flatMap((value) => expandSupabaseRestUrlCandidates(value)))
+);
+
+const SUPABASE_URL = SUPABASE_URL_OPTIONS[0] || null;
 
 const SUPABASE_RESOLVED_HOST = (() => {
   if (!SUPABASE_URL) return null;
@@ -131,30 +168,45 @@ const parseJsonResponse = async (response) => {
 };
 
 const supabaseFetch = async (endpoint, options = {}) => {
-  if (!SUPABASE_URL || !SUPABASE_KEY) {
+  if (SUPABASE_URL_OPTIONS.length === 0 || !SUPABASE_KEY) {
     throw new Error('Chybí Supabase konfigurace na serveru (SUPABASE_URL a SUPABASE_SERVICE_ROLE_KEY/SUPABASE_ANON_KEY)');
   }
 
-  const url = `${SUPABASE_URL}/rest/v1${endpoint}`;
-  const headers = {
-    apikey: SUPABASE_KEY,
-    Authorization: `Bearer ${SUPABASE_KEY}`,
-    ...options.headers,
-  };
+  let lastError = null;
 
-  if (!(options.body instanceof FormData)) {
-    headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+  for (const baseUrl of SUPABASE_URL_OPTIONS) {
+    const url = `${baseUrl}/rest/v1${endpoint}`;
+    const headers = {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      ...options.headers,
+    };
+
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+    }
+
+    try {
+      const response = await fetch(url, { ...options, headers });
+      const data = await parseJsonResponse(response);
+
+      if (!response.ok) {
+        const message = data?.message || data?.error || `HTTP ${response.status}`;
+        throw new Error(message);
+      }
+
+      return data;
+    } catch (err) {
+      lastError = err;
+      const message = String(err?.message || '').toLowerCase();
+      const shouldTryNext = message.includes('fetch failed') || message.includes('invalid ip address') || message.includes('enotfound');
+      if (!shouldTryNext) {
+        throw err;
+      }
+    }
   }
 
-  const response = await fetch(url, { ...options, headers });
-  const data = await parseJsonResponse(response);
-
-  if (!response.ok) {
-    const message = data?.message || data?.error || `HTTP ${response.status}`;
-    throw new Error(message);
-  }
-
-  return data;
+  throw lastError || new Error('Nepodařilo se spojit se Supabase');
 };
 
 module.exports = { supabaseFetch, getSupabaseDiagnostics };
