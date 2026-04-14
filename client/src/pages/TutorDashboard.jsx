@@ -1167,7 +1167,7 @@ export default function TutorDashboard() {
                         <div key={material.id} className="border border-orange-200 rounded-lg p-2 bg-white">
                           <p className="text-sm font-semibold text-gray-900">{material.file_name || "Materiál"}</p>
                         </div>
-                      ))
+                      ))}
                     </div>
                   )}
                 </div>
