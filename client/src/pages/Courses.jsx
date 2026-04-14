@@ -19,7 +19,7 @@ export default function Courses() {
       features: ["Komplexní gramatika", "Akademické texty", "Diskuse a argumenty", "Psaní esejů"]
     },
     {
-      imageSrc: "/pictures/jihlava_center.png",
+      imageSrc: "/pictures/pro.jpg",
       imageAlt: "Pokročilí kurz angličtiny",
       title: "Pokročilí (C1+)",
       description: "Dosáhněte dokonalosti. Mluvte jako rodilý mluvčí a čtěte složité texty bez problémů.",
@@ -40,9 +40,9 @@ export default function Courses() {
       features: ["FCE strategie", "Praxe se starými testy", "Časový management", "Mock zkoušky"]
     },
     {
-      imageSrc: "/pictures/doucovani.png",
-      imageAlt: "Konverzační kurz angličtiny",
-      title: "Konverzační Kurzy",
+      imageSrc: "/pictures/conversation.jpg",
+      imageAlt: "Konverzace v angličtině",
+      title: "Konverzace",
       description: "Zaměřte se na mluvení a porozumění angličtině v různých oblastech.",
       features: ["Aktivní diskuse", "Kulturní témata", "Zvukové materiály", "Filmové scény"]
     }
