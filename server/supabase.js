@@ -1,7 +1,45 @@
+const normalizeSupabaseRestUrl = (value) => {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+
+  if (/^postgres(?:ql)?:\/\//i.test(raw)) {
+    return null;
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    return null;
+  }
+
+  const hostname = String(parsed.hostname || '').toLowerCase();
+  const isDbHost = /^db\.[^.]+\.supabase\.co$/.test(hostname);
+
+  if (isDbHost) {
+    const parts = hostname.split('.');
+    const projectRef = parts[1];
+    if (!projectRef) return null;
+    return `https://${projectRef}.supabase.co`;
+  }
+
+  if (hostname.endsWith('.supabase.co')) {
+    return `${parsed.protocol}//${parsed.host}`.replace(/\/$/, '');
+  }
+
+  return null;
+};
+
+const SUPABASE_URL_CANDIDATES = [
+  process.env.SUPABASE_PROJECT_URL,
+  process.env.SUPABASE_URL,
+  process.env.VITE_SUPABASE_URL,
+]
+  .map((value) => String(value || '').trim())
+  .filter(Boolean);
+
 const SUPABASE_URL =
-  process.env.SUPABASE_URL ||
-  process.env.SUPABASE_PROJECT_URL ||
-  process.env.VITE_SUPABASE_URL;
+  SUPABASE_URL_CANDIDATES.map(normalizeSupabaseRestUrl).find(Boolean) || null;
 
 const pickFirstEnv = (keys) => {
   for (const key of keys) {
@@ -34,6 +72,8 @@ const SUPABASE_ENV_PRESENT = {
   VITE_SUPABASE_ANON_KEY: Boolean(process.env.VITE_SUPABASE_ANON_KEY),
 };
 
+const SUPABASE_URL_SOURCE = SUPABASE_URL_CANDIDATES.find((value) => normalizeSupabaseRestUrl(value)) || null;
+
 const getSupabaseRoleFromJwt = (jwt) => {
   try {
     const parts = String(jwt || '').split('.');
@@ -46,10 +86,13 @@ const getSupabaseRoleFromJwt = (jwt) => {
 };
 
 const resolvedRole = getSupabaseRoleFromJwt(SUPABASE_KEY);
-console.log(`[SUPABASE] URL configured: ${Boolean(SUPABASE_URL)} | key role: ${resolvedRole} | env present: ${JSON.stringify(SUPABASE_ENV_PRESENT)}`);
+console.log(
+  `[SUPABASE] URL configured: ${Boolean(SUPABASE_URL)} | url source: ${SUPABASE_URL_SOURCE ? 'set' : 'missing'} | key role: ${resolvedRole} | env present: ${JSON.stringify(SUPABASE_ENV_PRESENT)}`
+);
 
 const getSupabaseDiagnostics = () => ({
   urlConfigured: Boolean(SUPABASE_URL),
+  urlSourceConfigured: Boolean(SUPABASE_URL_SOURCE),
   keyRole: resolvedRole,
   keyLength: SUPABASE_KEY ? SUPABASE_KEY.length : 0,
   envPresent: SUPABASE_ENV_PRESENT,
