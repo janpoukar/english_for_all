@@ -1,37 +1,7 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
 const { supabaseFetch } = require('./supabase');
 
 const router = express.Router();
-
-const DATA_DIR = path.join(__dirname, 'data');
-const ASSIGNMENT_STATUS_STORE_PATH = path.join(DATA_DIR, 'assignment-status.json');
-
-const ensureStatusStore = () => {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-
-  if (!fs.existsSync(ASSIGNMENT_STATUS_STORE_PATH)) {
-    fs.writeFileSync(ASSIGNMENT_STATUS_STORE_PATH, JSON.stringify({ statuses: {} }, null, 2));
-  }
-};
-
-const readStatusStore = () => {
-  ensureStatusStore();
-  try {
-    const parsed = JSON.parse(fs.readFileSync(ASSIGNMENT_STATUS_STORE_PATH, 'utf8'));
-    return parsed && typeof parsed === 'object' ? parsed : { statuses: {} };
-  } catch {
-    return { statuses: {} };
-  }
-};
-
-const writeStatusStore = (store) => {
-  ensureStatusStore();
-  fs.writeFileSync(ASSIGNMENT_STATUS_STORE_PATH, JSON.stringify(store, null, 2));
-};
 
 const getAssignmentId = (assignment) => {
   if (!assignment || typeof assignment !== 'object') return null;
@@ -77,8 +47,7 @@ const patchAssignmentByKnownIdColumns = async (id, updates) => {
         return result[0];
       }
     } catch (err) {
-      const message = String(err?.message || '').toLowerCase();
-      if (message.includes('column') && message.includes(idColumn)) {
+      if (isMissingColumnError(err, idColumn)) {
         continue;
       }
       throw err;
@@ -120,23 +89,7 @@ const findAssignmentByOriginalPayload = async (original) => {
     return null;
   }
 
-  return (
-    result.find((item) => String(item?.title || '').trim() === originalTitle) ||
-    null
-  );
-};
-
-const mergeStatusFallback = (assignment) => {
-  if (!assignment) return assignment;
-
-  const assignmentId = getAssignmentId(assignment);
-  const statusStore = readStatusStore();
-  const storedStatus = assignmentId ? statusStore.statuses?.[assignmentId] : null;
-
-  return {
-    ...assignment,
-    status: assignment.status || storedStatus || 'probiha',
-  };
+  return result.find((item) => String(item?.title || '').trim() === originalTitle) || null;
 };
 
 router.get('/', async (req, res) => {
@@ -160,7 +113,10 @@ router.get('/', async (req, res) => {
       result = await supabaseFetch(`/assignments?lesson_id=eq.${encodeURIComponent(lessonId)}`);
     }
 
-    const normalized = (Array.isArray(result) ? result : []).map(mergeStatusFallback);
+    const normalized = (Array.isArray(result) ? result : []).map((assignment) => ({
+      ...assignment,
+      status: assignment.status || 'probiha',
+    }));
     res.json(normalized);
   } catch (err) {
     console.error('[ASSIGNMENTS] Fetch error:', err.message, err.code);
@@ -212,15 +168,13 @@ router.post('/', async (req, res) => {
     }
 
     const created = Array.isArray(result) ? result[0] : result;
-    const createdId = getAssignmentId(created);
 
-    if (createdId && status) {
-      const statusStore = readStatusStore();
-      statusStore.statuses[createdId] = normalizeStatus(status);
-      writeStatusStore(statusStore);
-    }
+    const normalizedCreated = {
+      ...created,
+      status: created?.status || normalizeStatus(status),
+    };
 
-    res.status(201).json(mergeStatusFallback(created));
+    res.status(201).json(normalizedCreated);
   } catch (err) {
     console.error('[ASSIGNMENTS] Create error:', err.message, err.code);
     res.status(500).json({ error: `Chyba při ukládání úkolu: ${err.message}` });
@@ -257,10 +211,6 @@ router.patch('/:id', async (req, res) => {
           updated = await patchAssignmentByKnownIdColumns(originalMatchId, nonStatusUpdates);
         }
       }
-
-      if (!updated) {
-        return res.status(404).json({ error: 'Úkol nebyl nalezen nebo nelze upravit' });
-      }
     }
 
     if (status !== undefined) {
@@ -290,22 +240,28 @@ router.patch('/:id', async (req, res) => {
         }
       }
 
-      const assignmentRef = updated || (await fetchAssignmentByKnownIdColumns(id));
-      const assignmentId = getAssignmentId(assignmentRef) || id;
-      const statusStore = readStatusStore();
-      statusStore.statuses[assignmentId] = normalizedStatus;
-      writeStatusStore(statusStore);
     }
 
     if (!updated) {
       updated = await fetchAssignmentByKnownIdColumns(id);
     }
 
-    if (!updated) {
-      return res.status(404).json({ error: 'Úkol nebyl nalezen' });
+    if (!updated && original) {
+      updated = await findAssignmentByOriginalPayload(original);
     }
 
-    res.json(mergeStatusFallback(updated));
+    if (!updated) {
+      return res.status(404).json({ error: 'Úkol nebyl nalezen nebo nelze upravit' });
+    }
+
+    const merged = {
+      ...updated,
+      ...nonStatusUpdates,
+      ...(status !== undefined ? { status } : {}),
+      status: (status !== undefined ? status : updated.status) || 'probiha',
+    };
+
+    res.json(merged);
   } catch (err) {
     console.error('[ASSIGNMENTS] Update error:', err.message, err.code);
     res.status(500).json({ error: `Chyba při úpravě úkolu: ${err.message}` });

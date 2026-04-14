@@ -704,6 +704,7 @@ export default function TutorDashboard() {
     setSaving(true);
     try {
       await updateAssignment(editingAssignment.id, {
+        lesson_id: selectedLesson?.id || editingAssignment._original?.lesson_id,
         title: editingAssignment.title.trim(),
         description: editingAssignment.description.trim() || null,
         due_date: editingAssignment.due_date || selectedLesson?.date,
