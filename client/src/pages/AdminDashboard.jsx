@@ -9,25 +9,11 @@ import {
   deleteContactMessage,
   fetchContactMessages,
   fetchLessons,
-  fetchNewsletterSettings,
-  fetchNewsletterCampaigns,
-  fetchNewsletterSmtp,
   fetchUsers,
   markContactMessageAsRead,
-  saveNewsletterSettings,
-  saveNewsletterSmtp,
-  sendNewsletterCampaign,
   updateLesson,
   updateUser,
 } from "../services/api";
-
-const NEWSLETTER_SETTINGS_KEY = "newsletterSettings";
-
-const defaultNewsletterSettings = {
-  title: "Přihlaste se k Newsletteru",
-  subtitle: "Dostávejte aktuální tipy na učení angličtiny a nové kurzy",
-  buttonText: "Přihlásit",
-};
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -37,34 +23,6 @@ export default function AdminDashboard() {
 
   const [users, setUsers] = useState([]);
   const [lessons, setLessons] = useState([]);
-  const [newsletterSettings, setNewsletterSettings] = useState(defaultNewsletterSettings);
-  const [newsletterLoading, setNewsletterLoading] = useState(false);
-  const [newsletterSaving, setNewsletterSaving] = useState(false);
-  const [smtpLoading, setSmtpLoading] = useState(false);
-  const [smtpSaving, setSmtpSaving] = useState(false);
-  const [newsletterMessage, setNewsletterMessage] = useState("");
-  const [smtpMessage, setSmtpMessage] = useState("");
-  const [smtpSettings, setSmtpSettings] = useState({
-    host: "",
-    port: 587,
-    secure: false,
-    user: "",
-    pass: "",
-    from: "",
-    hasPassword: false,
-  });
-  const [newsletterCampaign, setNewsletterCampaign] = useState({
-    subject: "",
-    preheader: "",
-    imageUrl: "",
-    imageAlt: "",
-    ctaText: "",
-    ctaUrl: "",
-    body: "",
-  });
-  const [newsletterSending, setNewsletterSending] = useState(false);
-  const [newsletterCampaigns, setNewsletterCampaigns] = useState([]);
-  const [campaignsLoading, setCampaignsLoading] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [selectedLessonIds, setSelectedLessonIds] = useState([]);
   const [contactMessages, setContactMessages] = useState([]);
@@ -99,24 +57,8 @@ export default function AdminDashboard() {
     setUser(parsed);
 
     loadData();
-    loadNewsletterSettings();
-    loadNewsletterSmtp();
-    loadNewsletterCampaigns();
     loadContactMessages();
   }, [navigate]);
-
-  const loadNewsletterSettings = async () => {
-    try {
-      setNewsletterLoading(true);
-      const settings = await fetchNewsletterSettings();
-      setNewsletterSettings({ ...defaultNewsletterSettings, ...settings });
-    } catch (err) {
-      setNewsletterSettings(defaultNewsletterSettings);
-      setNewsletterMessage(err.message || "Nepodařilo se načíst newsletter nastavení");
-    } finally {
-      setNewsletterLoading(false);
-    }
-  };
 
   const loadData = async () => {
     try {
@@ -133,36 +75,6 @@ export default function AdminDashboard() {
       setError(err.message || "Nepodařilo se načíst data");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadNewsletterSmtp = async () => {
-    try {
-      setSmtpLoading(true);
-      const token = localStorage.getItem("authToken");
-      const smtp = await fetchNewsletterSmtp(token);
-      setSmtpSettings((prev) => ({
-        ...prev,
-        ...smtp,
-        pass: "",
-      }));
-    } catch (err) {
-      setSmtpMessage("❌ " + (err.message || "Nepodařilo se načíst SMTP nastavení"));
-    } finally {
-      setSmtpLoading(false);
-    }
-  };
-
-  const loadNewsletterCampaigns = async () => {
-    try {
-      setCampaignsLoading(true);
-      const token = localStorage.getItem("authToken");
-      const campaigns = await fetchNewsletterCampaigns(token);
-      setNewsletterCampaigns(Array.isArray(campaigns) ? campaigns : []);
-    } catch (err) {
-      setNewsletterMessage("❌ " + (err.message || "Nepodařilo se načíst historii newsletterů"));
-    } finally {
-      setCampaignsLoading(false);
     }
   };
 
@@ -380,77 +292,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleSaveNewsletterSettings = async () => {
-    try {
-      setNewsletterSaving(true);
-      setNewsletterMessage("");
-      const token = localStorage.getItem("authToken");
-      await saveNewsletterSettings(newsletterSettings, token);
-      setNewsletterMessage("✅ Newsletter nastavení bylo uloženo.");
-      setTimeout(() => setNewsletterMessage(""), 3000);
-    } catch (err) {
-      setNewsletterMessage("❌ " + (err.message || "Nepodařilo se uložit newsletter nastavení"));
-    } finally {
-      setNewsletterSaving(false);
-    }
-  };
-
-  const handleSendNewsletter = async (event) => {
-    event.preventDefault();
-
-    if (!newsletterCampaign.subject.trim() || !newsletterCampaign.body.trim()) {
-      setNewsletterMessage("Vyplň předmět i text newsletteru");
-      return;
-    }
-
-    try {
-      setNewsletterSending(true);
-      setNewsletterMessage("");
-      const token = localStorage.getItem("authToken");
-      const result = await sendNewsletterCampaign(newsletterCampaign, token);
-      setNewsletterMessage(`✅ ${result.message}`);
-      setNewsletterCampaign({
-        subject: "",
-        preheader: "",
-        imageUrl: "",
-        imageAlt: "",
-        ctaText: "",
-        ctaUrl: "",
-        body: "",
-      });
-      await loadNewsletterCampaigns();
-    } catch (err) {
-      setNewsletterMessage("❌ " + (err.message || "Nepodařilo se připravit newsletter"));
-    } finally {
-      setNewsletterSending(false);
-    }
-  };
-
-  const handleSaveSmtpSettings = async () => {
-    try {
-      setSmtpSaving(true);
-      setSmtpMessage("");
-      const token = localStorage.getItem("authToken");
-      const payload = {
-        host: smtpSettings.host,
-        port: smtpSettings.port,
-        secure: smtpSettings.secure,
-        user: smtpSettings.user,
-        pass: smtpSettings.pass,
-        from: smtpSettings.from,
-      };
-
-      const saved = await saveNewsletterSmtp(payload, token);
-      setSmtpSettings((prev) => ({ ...prev, ...saved, pass: "" }));
-      setSmtpMessage("✅ SMTP nastavení bylo uloženo.");
-      setTimeout(() => setSmtpMessage(""), 3000);
-    } catch (err) {
-      setSmtpMessage("❌ " + (err.message || "Nepodařilo se uložit SMTP nastavení"));
-    } finally {
-      setSmtpSaving(false);
-    }
-  };
-
   const handleMarkContactMessageAsRead = async (id) => {
     try {
       const token = localStorage.getItem("authToken");
@@ -489,7 +330,7 @@ export default function AdminDashboard() {
       <div className="bg-slate-900 text-white py-4 px-4 md:px-8 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-black">Správa Stránky</h1>
-          <p className="text-slate-300 text-sm">Newsletter, hodiny, uživatelé</p>
+          <p className="text-slate-300 text-sm">Hodiny, uživatelé, kontakt</p>
         </div>
         <button
           onClick={handleLogout}
@@ -515,259 +356,6 @@ export default function AdminDashboard() {
             <p className="text-sm text-slate-500">Přihlášen jako</p>
             <p className="text-xl font-bold text-slate-900">{user.name}</p>
           </div>
-        </section>
-
-        <section className="bg-white rounded-xl border border-slate-200 p-4 md:p-5">
-          <h2 className="text-xl font-bold text-slate-900 mb-4">Newsletter</h2>
-          {newsletterMessage && (
-            <div className={`rounded-lg p-3 mb-4 ${newsletterMessage.startsWith("✅") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
-              {newsletterMessage}
-            </div>
-          )}
-
-          {newsletterLoading && <p className="text-sm text-slate-500 mb-3">Načítám newsletter nastavení...</p>}
-
-          <div className="grid md:grid-cols-3 gap-3">
-            <input
-              className="form-input"
-              value={newsletterSettings.title}
-              onChange={(event) =>
-                setNewsletterSettings((prev) => ({ ...prev, title: event.target.value }))
-              }
-              placeholder="Nadpis"
-            />
-            <input
-              className="form-input"
-              value={newsletterSettings.subtitle}
-              onChange={(event) =>
-                setNewsletterSettings((prev) => ({ ...prev, subtitle: event.target.value }))
-              }
-              placeholder="Podnadpis"
-            />
-            <input
-              className="form-input"
-              value={newsletterSettings.buttonText}
-              onChange={(event) =>
-                setNewsletterSettings((prev) => ({ ...prev, buttonText: event.target.value }))
-              }
-              placeholder="Text tlačítka"
-            />
-          </div>
-          <div className="mt-3">
-            <button
-              onClick={handleSaveNewsletterSettings}
-              disabled={newsletterSaving}
-              className="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-semibold disabled:opacity-50"
-            >
-              {newsletterSaving ? "Ukládám..." : "Uložit newsletter"}
-            </button>
-          </div>
-        </section>
-
-        <section className="bg-white rounded-xl border border-slate-200 p-4 md:p-5">
-          <h2 className="text-xl font-bold text-slate-900 mb-4">SMTP přihlášení pro newsletter</h2>
-
-          {smtpMessage && (
-            <div className={`rounded-lg p-3 mb-4 ${smtpMessage.startsWith("✅") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
-              {smtpMessage}
-            </div>
-          )}
-
-          {smtpLoading && <p className="text-sm text-slate-500 mb-3">Načítám SMTP nastavení...</p>}
-
-          <div className="grid md:grid-cols-2 gap-3">
-            <div>
-              <label className="text-sm font-semibold text-slate-700">SMTP host</label>
-              <input
-                className="form-input mt-1"
-                value={smtpSettings.host}
-                onChange={(event) => setSmtpSettings((prev) => ({ ...prev, host: event.target.value }))}
-                placeholder="smtp.gmail.com"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-semibold text-slate-700">SMTP port</label>
-              <input
-                className="form-input mt-1"
-                value={smtpSettings.port}
-                onChange={(event) => setSmtpSettings((prev) => ({ ...prev, port: Number(event.target.value) || 587 }))}
-                placeholder="587"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-semibold text-slate-700">SMTP uživatel (email)</label>
-              <input
-                className="form-input mt-1"
-                value={smtpSettings.user}
-                onChange={(event) => setSmtpSettings((prev) => ({ ...prev, user: event.target.value }))}
-                placeholder="newsletter@domena.cz"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-semibold text-slate-700">Odesílatel (From)</label>
-              <input
-                className="form-input mt-1"
-                value={smtpSettings.from}
-                onChange={(event) => setSmtpSettings((prev) => ({ ...prev, from: event.target.value }))}
-                placeholder="English for All <newsletter@domena.cz>"
-              />
-            </div>
-            <div className="md:col-span-2">
-              <label className="text-sm font-semibold text-slate-700">
-                SMTP heslo {smtpSettings.hasPassword ? "(ponech prázdné pro zachování)" : ""}
-              </label>
-              <input
-                type="password"
-                className="form-input mt-1"
-                value={smtpSettings.pass}
-                onChange={(event) => setSmtpSettings((prev) => ({ ...prev, pass: event.target.value }))}
-                placeholder="SMTP heslo nebo app password"
-              />
-            </div>
-            <div className="md:col-span-2 flex items-center gap-2 mt-1">
-              <input
-                id="smtp-secure"
-                type="checkbox"
-                checked={smtpSettings.secure}
-                onChange={(event) => setSmtpSettings((prev) => ({ ...prev, secure: event.target.checked }))}
-              />
-              <label htmlFor="smtp-secure" className="text-sm text-slate-700">Použít secure SMTP (obvykle port 465)</label>
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <button
-              onClick={handleSaveSmtpSettings}
-              disabled={smtpSaving}
-              className="px-4 py-2 rounded-lg bg-indigo-700 hover:bg-indigo-800 text-white font-semibold disabled:opacity-50"
-            >
-              {smtpSaving ? "Ukládám SMTP..." : "Uložit SMTP"}
-            </button>
-          </div>
-        </section>
-
-        <section className="bg-white rounded-xl border border-slate-200 p-4 md:p-5">
-          <h2 className="text-xl font-bold text-slate-900 mb-4">Rozeslání newsletteru</h2>
-          <form onSubmit={handleSendNewsletter} className="space-y-3">
-            <div className="grid md:grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm font-semibold text-slate-700">Předmět</label>
-                <input
-                  className="form-input mt-1"
-                  value={newsletterCampaign.subject}
-                  onChange={(event) => setNewsletterCampaign((prev) => ({ ...prev, subject: event.target.value }))}
-                  placeholder="Např. Novinky z výuky angličtiny"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-semibold text-slate-700">Preheader</label>
-                <input
-                  className="form-input mt-1"
-                  value={newsletterCampaign.preheader}
-                  onChange={(event) => setNewsletterCampaign((prev) => ({ ...prev, preheader: event.target.value }))}
-                  placeholder="Krátký text do náhledu schránky"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-semibold text-slate-700">URL obrázku</label>
-              <input
-                className="form-input mt-1"
-                value={newsletterCampaign.imageUrl}
-                onChange={(event) => setNewsletterCampaign((prev) => ({ ...prev, imageUrl: event.target.value }))}
-                placeholder="https://.../obrazek.jpg"
-              />
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm font-semibold text-slate-700">Alt text obrázku</label>
-                <input
-                  className="form-input mt-1"
-                  value={newsletterCampaign.imageAlt}
-                  onChange={(event) => setNewsletterCampaign((prev) => ({ ...prev, imageAlt: event.target.value }))}
-                  placeholder="Popis obrázku"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-semibold text-slate-700">Text tlačítka</label>
-                <input
-                  className="form-input mt-1"
-                  value={newsletterCampaign.ctaText}
-                  onChange={(event) => setNewsletterCampaign((prev) => ({ ...prev, ctaText: event.target.value }))}
-                  placeholder="Např. Zjistit více"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-semibold text-slate-700">Odkaz tlačítka</label>
-              <input
-                className="form-input mt-1"
-                value={newsletterCampaign.ctaUrl}
-                onChange={(event) => setNewsletterCampaign((prev) => ({ ...prev, ctaUrl: event.target.value }))}
-                placeholder="https://..."
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-semibold text-slate-700">Text newsletteru</label>
-              <textarea
-                className="form-textarea mt-1 min-h-[220px] text-slate-900 placeholder:text-slate-500 font-mono text-sm"
-                value={newsletterCampaign.body}
-                onChange={(event) => setNewsletterCampaign((prev) => ({ ...prev, body: event.target.value }))}
-                placeholder={"Můžeš psát čistý text nebo HTML.\n\nNapříklad:\n<h1>Nový kurz</h1>\n<p>Podívejte se na nové lekce.</p>"}
-              />
-            </div>
-            <p className="text-xs text-slate-500">
-              E-mail se odešle všem uživatelům v databázi s vyplněným e-mailem. Obrázek lze vložit přes URL.
-            </p>
-            <button
-              type="submit"
-              disabled={newsletterSending}
-              className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold disabled:opacity-50"
-            >
-              {newsletterSending ? "Připravuji..." : "Rozeslat newsletter"}
-            </button>
-          </form>
-        </section>
-
-        <section className="bg-white rounded-xl border border-slate-200 p-4 md:p-5">
-          <h2 className="text-xl font-bold text-slate-900 mb-4">Historie newsletterů</h2>
-
-          {campaignsLoading ? (
-            <p className="text-sm text-slate-500">Načítám historii...</p>
-          ) : newsletterCampaigns.length === 0 ? (
-            <p className="text-sm text-slate-500">Zatím nebyl odeslán žádný newsletter.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-slate-500 border-b">
-                    <th className="py-2 pr-3">Předmět</th>
-                    <th className="py-2 pr-3">Odesláno</th>
-                    <th className="py-2 pr-3">Neúspěšné</th>
-                    <th className="py-2">Datum</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {newsletterCampaigns.map((campaign) => (
-                    <tr key={campaign.id} className="border-b last:border-0">
-                      <td className="py-2 pr-3 font-semibold text-slate-800">{campaign.subject}</td>
-                      <td className="py-2 pr-3">{campaign.sent_count ?? campaign.subscriber_count ?? 0}</td>
-                      <td className="py-2 pr-3">{campaign.failed_count ?? 0}</td>
-                      <td className="py-2 text-slate-600">
-                        {campaign.created_at
-                          ? new Date(campaign.created_at).toLocaleString("cs-CZ")
-                          : "-"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
         </section>
 
         <section className="bg-white rounded-xl border border-slate-200 p-4 md:p-5">

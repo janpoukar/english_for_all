@@ -1,44 +1,7 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchNewsletterSettings, subscribeNewsletter } from "../../services/api";
-
-const defaultNewsletterSettings = {
-  title: "Přihlaste se k Newsletteru",
-  subtitle: "Dostávejte aktuální tipy na učení angličtiny a nové kurzy",
-  buttonText: "Přihlásit",
-};
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
-  const [newsletterSettings, setNewsletterSettings] = useState(defaultNewsletterSettings);
-  const [newsletterEmail, setNewsletterEmail] = useState("");
-
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const settings = await fetchNewsletterSettings();
-        setNewsletterSettings({ ...defaultNewsletterSettings, ...settings });
-      } catch {
-        setNewsletterSettings(defaultNewsletterSettings);
-      }
-    };
-
-    loadSettings();
-  }, []);
-
-  const handleNewsletterSubmit = async (event) => {
-    event.preventDefault();
-    const email = newsletterEmail.trim().toLowerCase();
-    if (!email) return;
-
-    try {
-      await subscribeNewsletter(email);
-      setNewsletterEmail("");
-      alert("Děkujeme za přihlášení k newsletteru.");
-    } catch (error) {
-      alert(error.message || "Nepodařilo se přihlásit k newsletteru.");
-    }
-  };
 
   return (
     <footer className="bg-gradient-to-b from-blue-950 via-gray-900 to-black text-white">
@@ -129,7 +92,7 @@ export default function Footer() {
               <ul className="space-y-4">
                 <li className="text-gray-300 hover:text-white transition group">
                   <span className="block font-bold text-white mb-1 text-sm group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-orange-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">Adresa</span>
-                  <span className="text-xs text-gray-400">Nerudova 42, Praha 1</span>
+                  <span className="text-xs text-gray-400">Křížová 123, Jihlava</span>
                 </li>
                 <li className="text-gray-300 hover:text-white transition group">
                   <span className="block font-bold text-white mb-1 text-sm group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-orange-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">Telefon</span>
@@ -137,35 +100,9 @@ export default function Footer() {
                 </li>
                 <li className="text-gray-300 hover:text-white transition group">
                   <span className="block font-bold text-white mb-1 text-sm group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-orange-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">Email</span>
-                  <span className="text-xs text-gray-400">info@englishtutor.cz</span>
+                  <span className="text-xs text-gray-400">efa.anglictina@gmail.com</span>
                 </li>
               </ul>
-            </div>
-          </div>
-
-          {/* Newsletter */}
-          <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-red-700 rounded-2xl p-8 md:p-12 mb-12 animate-fade-in-up shadow-hard hover-lift transform transition-all border border-blue-700/50">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div>
-                <h3 className="text-2xl md:text-3xl font-bold mb-3 text-white">{newsletterSettings.title}</h3>
-                <p className="text-blue-100 text-sm md:text-base">{newsletterSettings.subtitle}</p>
-              </div>
-              <form onSubmit={handleNewsletterSubmit} className="flex gap-2 flex-col md:flex-row">
-                <input
-                  type="email"
-                  placeholder="Váš email"
-                  value={newsletterEmail}
-                  onChange={(event) => setNewsletterEmail(event.target.value)}
-                  className="flex-1 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 form-input bg-white font-medium text-sm text-slate-900 placeholder:text-slate-500"
-                  required
-                />
-                <button
-                  type="submit"
-                  className="px-6 md:px-8 py-3 bg-white text-blue-900 font-bold rounded-lg hover:shadow-lg hover:-translate-y-1 transition-all hover-shine text-sm md:text-base"
-                >
-                  {newsletterSettings.buttonText}
-                </button>
-              </form>
             </div>
           </div>
 

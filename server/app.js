@@ -8,7 +8,6 @@ const authRoutes = require('./Authroutes');
 const lessonRoutes = require('./leassonRoutes');
 const assignmentRoutes = require('./assignmentRoutes');
 const materialsRoutes = require('./materialsRoutes');
-const newsletterRoutes = require('./newsletterRoutes');
 const contactMessagesRoutes = require('./contactMessagesRoutes');
 
 const app = express();
@@ -52,7 +51,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/lessons', lessonRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/materials', materialsRoutes);
-app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/contact', contactMessagesRoutes);
 
 // Serve shared image assets from the repository root

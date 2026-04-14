@@ -79,8 +79,7 @@ export default function Contact() {
                   <div className="text-4xl">📍</div>
                   <div>
                     <h3 className="font-bold text-xl text-gray-800 mb-2">Adresa</h3>
-                    <p className="text-gray-600">Nerudova 42, Praha 1</p>
-                    <p className="text-gray-600">Bělska 8, Praha 2</p>
+                    <p className="text-gray-600">Křížová 123, Jihlava</p>
                   </div>
                 </div>
 
@@ -97,7 +96,7 @@ export default function Contact() {
                   <div className="text-4xl">📧</div>
                   <div>
                     <h3 className="font-bold text-xl text-gray-800 mb-2">E-mail</h3>
-                    <p className="text-gray-600">info@englishtutor.cz</p>
+                    <p className="text-gray-600">efa.anglictina@gmail.com</p>
                     <p className="text-gray-600">booking@englishtutor.cz</p>
                   </div>
                 </div>
