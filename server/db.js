@@ -6,7 +6,27 @@ if (typeof dns.setDefaultResultOrder === 'function') {
 }
 
 const useSsl = (process.env.DB_SSL || 'true') !== 'false';
-const connectionString = process.env.DATABASE_URL;
+const pickFirstEnv = (keys) => {
+  for (const key of keys) {
+    const value = process.env[key];
+    if (value && String(value).trim()) {
+      return { key, value: String(value).trim() };
+    }
+  }
+
+  return { key: null, value: null };
+};
+
+const connectionStringCandidate = pickFirstEnv([
+  'DATABASE_URL',
+  'POSTGRES_URL',
+  'POSTGRESQL_URL',
+  'SUPABASE_DATABASE_URL',
+  'SUPABASE_DB_URL',
+  'PG_CONNECTION_STRING',
+  'PGDATABASE_URL',
+]);
+const connectionString = connectionStringCandidate.value;
 
 const poolConfig = connectionString
   ? { connectionString }
@@ -31,6 +51,7 @@ poolConfig.connectionTimeoutMillis = 10000; // 10 sekund
 poolConfig.idleTimeoutMillis = 30000; // 30 sekund idle timeout
 
 const pool = new Pool(poolConfig);
+console.log(`[PG] connection source: ${connectionStringCandidate.key || 'none'} | hasConnection: ${Boolean(connectionString)}`);
 
 // Better error handling
 pool.on('error', (err) => {
