@@ -87,7 +87,13 @@ const initializeSchema = async () => {
   }
 };
 
+const getDatabaseDiagnostics = () => ({
+  connectionSource: connectionStringCandidate.key,
+  hasConnectionString: Boolean(connectionString),
+});
+
 // Run schema initialization when module loads
 initializeSchema().catch(err => console.error('Failed to initialize schema:', err));
 
 module.exports = pool;
+module.exports.getDatabaseDiagnostics = getDatabaseDiagnostics;

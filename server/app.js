@@ -17,6 +17,7 @@ app.use(express.json());
 
 app.get('/api/health', async (req, res) => {
   const supabase = getSupabaseDiagnostics();
+  const database = typeof pool.getDatabaseDiagnostics === 'function' ? pool.getDatabaseDiagnostics() : null;
   let postgresReachable = false;
 
   try {
@@ -29,6 +30,7 @@ app.get('/api/health', async (req, res) => {
   res.status(200).json({
     status: 'ok',
     supabase,
+    database,
     postgresReachable,
   });
 });
