@@ -60,7 +60,7 @@ export default function Gallery() {
             {[
               { icon: "🏫", title: "Učebna v centru města Jihlavy", desc: "Pohodlná dostupnost a příjemné prostředí" },
               { icon: "👨‍🏫", title: "Zkušená lektorka", desc: "Dlouholetá praxe ve výuce angličtiny" },
-              { icon: "📚", title: "Vybavená učebna pro výuku", desc: "Moderní zázemí pro efektivní lekce" },
+              { icon: "📚", title: "Vybavená učebna pro výuku", desc: "Příjemné prostředí vybavené pro výuku" },
               { icon: "🎯", title: "Příprava na různé zkoušky", desc: "FCE, IELTS a další jazykové zkoušky" }
             ].map((item, idx) => (
               <div key={idx} className="text-center animate-fade-in-up" style={{ animationDelay: `${idx * 0.1}s` }}>

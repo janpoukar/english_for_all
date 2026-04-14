@@ -97,7 +97,6 @@ export default function Contact() {
                   <div>
                     <h3 className="font-bold text-xl text-gray-800 mb-2">E-mail</h3>
                     <p className="text-gray-600">efa.anglictina@gmail.com</p>
-                    <p className="text-gray-600">booking@englishtutor.cz</p>
                   </div>
                 </div>
 
