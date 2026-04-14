@@ -9,7 +9,7 @@ const lessonRoutes = require('./leassonRoutes');
 const assignmentRoutes = require('./assignmentRoutes');
 const materialsRoutes = require('./materialsRoutes');
 const newsletterRoutes = require('./newsletterRoutes');
-const contactRoutes = require('./contactRoutes');
+const contactMessagesRoutes = require('./contactMessagesRoutes');
 
 const app = express();
 
@@ -53,7 +53,7 @@ app.use('/api/lessons', lessonRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/materials', materialsRoutes);
 app.use('/api/newsletter', newsletterRoutes);
-app.use('/api/contact', contactRoutes);
+app.use('/api/contact', contactMessagesRoutes);
 
 // Serve shared image assets from the repository root
 app.use('/pictures', express.static(path.join(__dirname, '../pictures')));

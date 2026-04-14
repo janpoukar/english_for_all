@@ -6,11 +6,14 @@ import {
   createUser,
   deleteLesson,
   deleteUser,
+  deleteContactMessage,
+  fetchContactMessages,
   fetchLessons,
   fetchNewsletterSettings,
   fetchNewsletterCampaigns,
   fetchNewsletterSmtp,
   fetchUsers,
+  markContactMessageAsRead,
   saveNewsletterSettings,
   saveNewsletterSmtp,
   sendNewsletterCampaign,
@@ -64,6 +67,8 @@ export default function AdminDashboard() {
   const [campaignsLoading, setCampaignsLoading] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [selectedLessonIds, setSelectedLessonIds] = useState([]);
+  const [contactMessages, setContactMessages] = useState([]);
+  const [contactMessagesLoading, setContactMessagesLoading] = useState(false);
 
   // State pro změnu hesla
   const [selectedUserForPassword, setSelectedUserForPassword] = useState(null);
@@ -97,6 +102,7 @@ export default function AdminDashboard() {
     loadNewsletterSettings();
     loadNewsletterSmtp();
     loadNewsletterCampaigns();
+    loadContactMessages();
   }, [navigate]);
 
   const loadNewsletterSettings = async () => {
@@ -157,6 +163,20 @@ export default function AdminDashboard() {
       setNewsletterMessage("❌ " + (err.message || "Nepodařilo se načíst historii newsletterů"));
     } finally {
       setCampaignsLoading(false);
+    }
+  };
+
+  const loadContactMessages = async () => {
+    try {
+      setContactMessagesLoading(true);
+      const token = localStorage.getItem("authToken");
+      const messages = await fetchContactMessages(token);
+      setContactMessages(Array.isArray(messages) ? messages : []);
+    } catch (err) {
+      console.error("Error loading contact messages:", err);
+      setContactMessages([]);
+    } finally {
+      setContactMessagesLoading(false);
     }
   };
 
@@ -428,6 +448,29 @@ export default function AdminDashboard() {
       setSmtpMessage("❌ " + (err.message || "Nepodařilo se uložit SMTP nastavení"));
     } finally {
       setSmtpSaving(false);
+    }
+  };
+
+  const handleMarkContactMessageAsRead = async (id) => {
+    try {
+      const token = localStorage.getItem("authToken");
+      await markContactMessageAsRead(id, token);
+      await loadContactMessages();
+    } catch (err) {
+      console.error("Chyba při označení zprávy jako přečtené:", err);
+      alert("Nepodařilo se označit zprávu jako přečtenou");
+    }
+  };
+
+  const handleDeleteContactMessage = async (id) => {
+    if (!window.confirm("Opravdu smazat tuto zprávu?")) return;
+    try {
+      const token = localStorage.getItem("authToken");
+      await deleteContactMessage(id, token);
+      await loadContactMessages();
+    } catch (err) {
+      console.error("Chyba při smazání zprávy:", err);
+      alert("Nepodařilo se smazat zprávu");
     }
   };
 
@@ -951,6 +994,79 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
+        </section>
+
+        <section className="bg-white rounded-xl border border-slate-200 p-4 md:p-5">
+          <h2 className="text-xl font-bold text-slate-900 mb-4">📧 Zprávy z kontaktního formuláře</h2>
+          
+          {contactMessagesLoading ? (
+            <p className="text-sm text-slate-500">Načítám zprávy...</p>
+          ) : contactMessages.length === 0 ? (
+            <p className="text-sm text-slate-500">Zatím žádné zprávy.</p>
+          ) : (
+            <div className="space-y-3">
+              {contactMessages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`border rounded-lg p-4 ${
+                    message.read ? "bg-slate-50 border-slate-200" : "bg-blue-50 border-blue-300"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-semibold text-slate-900 break-words">{message.name}</h3>
+                        {!message.read && (
+                          <span className="inline-block px-2 py-1 text-xs font-semibold bg-blue-600 text-white rounded">
+                            NOVÉ
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-slate-600 break-words">
+                        <strong>Email:</strong> {message.email}
+                      </p>
+                      {message.phone && (
+                        <p className="text-sm text-slate-600">
+                          <strong>Telefon:</strong> {message.phone}
+                        </p>
+                      )}
+                      <p className="text-sm text-slate-600 mt-1">
+                        <strong>Předmět:</strong> {message.subject}
+                      </p>
+                      {message.course_type && (
+                        <p className="text-sm text-slate-600">
+                          <strong>Typ kurzu:</strong> {message.course_type}
+                        </p>
+                      )}
+                      <p className="text-sm text-slate-700 mt-2 whitespace-pre-wrap break-words">
+                        <strong>Zpráva:</strong><br />
+                        {message.message}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-2">
+                        Přijato: {message.created_at ? new Date(message.created_at).toLocaleString("cs-CZ") : "-"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {!message.read && (
+                        <button
+                          onClick={() => handleMarkContactMessageAsRead(message.id)}
+                          className="px-3 py-1 rounded bg-green-600 hover:bg-green-700 text-white text-xs font-semibold whitespace-nowrap"
+                        >
+                          Označit
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDeleteContactMessage(message.id)}
+                        className="px-3 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-xs font-semibold whitespace-nowrap"
+                      >
+                        Smazat
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </main>

@@ -643,3 +643,50 @@ export const fetchNewsletterCampaigns = async (token) => {
     throw error;
   }
 };
+
+export const fetchContactMessages = async (token) => {
+  try {
+    const response = await fetch(`${API_BASE}/contact`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return await parseJsonResponse(response, "Nepodařilo se načíst kontaktní zprávy");
+  } catch (error) {
+    console.error("Error fetching contact messages:", error);
+    throw error;
+  }
+};
+
+export const markContactMessageAsRead = async (id, token) => {
+  try {
+    const response = await fetch(`${API_BASE}/contact/${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ read: true }),
+    });
+    return await parseJsonResponse(response, "Nepodařilo se aktualizovat zprávu");
+  } catch (error) {
+    console.error("Error marking message as read:", error);
+    throw error;
+  }
+};
+
+export const deleteContactMessage = async (id, token) => {
+  try {
+    const response = await fetch(`${API_BASE}/contact/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) throw new Error("Failed to delete message");
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting contact message:", error);
+    throw error;
+  }
+};
