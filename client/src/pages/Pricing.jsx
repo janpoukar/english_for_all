@@ -34,7 +34,7 @@ export default function Pricing() {
       name: "Doučování ve firmách",
       price: "od 600+",
       period: "hodina",
-      description: "Firemní výuka přímo u vás na pracovišti nebo online. Obsah na míru podle oboru a týmu.",
+      description: "Firemní výuka přímo u vás na pracovišti. Obsah na míru podle oboru a týmu.",
       icon: "🏢",
       color: "from-amber-50 via-white to-orange-50",
       borderColor: "border-amber-200",
@@ -103,9 +103,9 @@ export default function Pricing() {
                   <h3 className="text-2xl md:text-3xl font-black text-gray-900 mb-2">{plan.name}</h3>
                   <p className="text-gray-600 text-sm md:text-base mb-8 max-w-xl mx-auto">{plan.description}</p>
 
-                  <div className="mb-8">
+                  <div className="mb-8 flex items-end justify-center gap-2 whitespace-nowrap">
                     <span className="text-5xl md:text-6xl font-black text-gray-900">{plan.price} Kč</span>
-                    <span className="text-gray-600 ml-2 text-lg">/ {plan.period}</span>
+                    <span className="text-gray-600 text-lg">/ {plan.period}</span>
                   </div>
 
                   <Link
