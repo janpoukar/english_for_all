@@ -22,6 +22,18 @@ const SUPABASE_KEY = pickFirstEnv([
   'VITE_SUPABASE_ANON_KEY',
 ]);
 
+const SUPABASE_ENV_PRESENT = {
+  SUPABASE_URL: Boolean(process.env.SUPABASE_URL),
+  SUPABASE_PROJECT_URL: Boolean(process.env.SUPABASE_PROJECT_URL),
+  VITE_SUPABASE_URL: Boolean(process.env.VITE_SUPABASE_URL),
+  SUPABASE_SERVICE_ROLE_KEY: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+  SUPABASE_SERVICE_KEY: Boolean(process.env.SUPABASE_SERVICE_KEY),
+  SUPABASE_SECRET_KEY: Boolean(process.env.SUPABASE_SECRET_KEY),
+  SUPABASE_KEY: Boolean(process.env.SUPABASE_KEY),
+  SUPABASE_ANON_KEY: Boolean(process.env.SUPABASE_ANON_KEY),
+  VITE_SUPABASE_ANON_KEY: Boolean(process.env.VITE_SUPABASE_ANON_KEY),
+};
+
 const getSupabaseRoleFromJwt = (jwt) => {
   try {
     const parts = String(jwt || '').split('.');
@@ -34,11 +46,13 @@ const getSupabaseRoleFromJwt = (jwt) => {
 };
 
 const resolvedRole = getSupabaseRoleFromJwt(SUPABASE_KEY);
-console.log(`[SUPABASE] URL configured: ${Boolean(SUPABASE_URL)} | key role: ${resolvedRole}`);
+console.log(`[SUPABASE] URL configured: ${Boolean(SUPABASE_URL)} | key role: ${resolvedRole} | env present: ${JSON.stringify(SUPABASE_ENV_PRESENT)}`);
 
 const getSupabaseDiagnostics = () => ({
   urlConfigured: Boolean(SUPABASE_URL),
   keyRole: resolvedRole,
+  keyLength: SUPABASE_KEY ? SUPABASE_KEY.length : 0,
+  envPresent: SUPABASE_ENV_PRESENT,
 });
 
 const parseJsonResponse = async (response) => {
