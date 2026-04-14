@@ -75,7 +75,6 @@ export default function Login() {
                 value={formData.email}
                 onChange={handleChange}
                 className="form-input"
-                placeholder="student@example.com"
                 required
               />
             </div>
@@ -91,7 +90,6 @@ export default function Login() {
                 value={formData.password}
                 onChange={handleChange}
                 className="form-input"
-                placeholder="••••••••"
                 required
               />
             </div>

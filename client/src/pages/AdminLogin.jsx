@@ -52,7 +52,6 @@ export default function AdminLogin() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               className="form-input"
-              placeholder="efa.anglictina@gmail.com"
               required
             />
           </div>
@@ -64,7 +63,6 @@ export default function AdminLogin() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               className="form-input"
-              placeholder="••••••••"
               required
             />
           </div>
