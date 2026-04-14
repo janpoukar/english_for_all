@@ -60,7 +60,7 @@ export default function Home() {
               <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight text-white">
                 English for All
                 <span className="block bg-gradient-to-r from-blue-200 to-blue-300 bg-clip-text text-transparent mt-3 text-5xl md:text-6xl font-black">
-                  - Bez komplikací
+                  Angličtina bez komplikací
                 </span>
               </h1>
               
