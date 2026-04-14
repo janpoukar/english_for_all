@@ -26,7 +26,7 @@ export default function Footer() {
 
             {/* Quick Links */}
             <div className="animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
-              <h4 className="font-bold mb-6 text-lg text-white">Rychlé Odkady</h4>
+              <h4 className="font-bold mb-6 text-lg text-white">Rychlé odkazy</h4>
               <ul className="space-y-3">
                 <li>
                   <Link to="/" className="text-gray-300 hover:text-white transition-all relative group font-medium text-sm">
@@ -79,7 +79,7 @@ export default function Footer() {
                 </li>
                 <li>
                   <a href="#" className="text-gray-300 hover:text-white transition-all relative group font-medium text-sm">
-                    Business Angličtina
+                    Business angličtina
                     <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-orange-500 group-hover:w-full transition-all duration-300"></span>
                   </a>
                 </li>
@@ -91,15 +91,15 @@ export default function Footer() {
               <h4 className="font-bold mb-6 text-lg text-white">Kontakt</h4>
               <ul className="space-y-4">
                 <li className="text-gray-300 hover:text-white transition group">
-                  <span className="block font-bold text-white mb-1 text-sm group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-orange-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">Adresa</span>
+                  <span className="block font-bold text-white mb-1 text-sm group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-orange-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">Adresa:</span>
                   <span className="text-xs text-gray-400">Křížová, Jihlava</span>
                 </li>
                 <li className="text-gray-300 hover:text-white transition group">
-                  <span className="block font-bold text-white mb-1 text-sm group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-orange-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">Telefon</span>
+                  <span className="block font-bold text-white mb-1 text-sm group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-orange-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">Telefon:</span>
                   <span className="text-xs text-gray-400">+420 777 123 456</span>
                 </li>
                 <li className="text-gray-300 hover:text-white transition group">
-                  <span className="block font-bold text-white mb-1 text-sm group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-orange-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">Email</span>
+                  <span className="block font-bold text-white mb-1 text-sm group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-orange-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">Email:</span>
                   <span className="text-xs text-gray-400">efa.anglictina@gmail.com</span>
                 </li>
               </ul>
@@ -127,7 +127,7 @@ export default function Footer() {
                 >
                   Správa stránky
                 </Link>
-              </div>
+              </div>``
             </div>
           </div>
         </div>

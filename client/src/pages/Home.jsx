@@ -8,7 +8,7 @@ export default function Home() {
       imageSrc: "/pictures/doucovani.png",
       imageAlt: "Doučování",
       title: "Doučování",
-      description: "Cílená výuka pro domluvení se v zahraničí, v běžných situacích i na cestách.",
+      description: "Cílená výuka pro snadnou komunikaci v zahraničí, v běžných situacích i na cestách.",
       features: ["Praktické fráze", "Jistota v běžné komunikaci", "Konverzační trénink", "Důraz na používání jazyka v praxi"]
     },
     {
@@ -60,7 +60,7 @@ export default function Home() {
               <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight text-white">
                 English for All
                 <span className="block bg-gradient-to-r from-blue-200 to-blue-300 bg-clip-text text-transparent mt-3 text-5xl md:text-6xl font-black">
-                  Bez komplikací
+                  - Bez komplikací
                 </span>
               </h1>
               
@@ -88,7 +88,7 @@ export default function Home() {
                   <p className="text-gray-200 text-xs md:text-sm mt-2">Let zkušeností</p>
                 </div>
                 <div className="animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
-                  <p className="text-3xl md:text-4xl font-bold">95%</p>
+                  <p className="text-3xl md:text-4xl font-bold">95 %</p>
                   <p className="text-gray-200 text-xs md:text-sm mt-2">Úspěšnost</p>
                 </div>
               </div>
@@ -106,7 +106,7 @@ export default function Home() {
                   <p className="text-sm text-gray-100">Zábavná a poutavá výuka</p>
                 </div>
                 <div className="card-modern bg-white/10 glass-effect backdrop-blur border border-white/30 hover-lift p-6 transform transition-all">
-                  <p className="font-bold text-lg mb-2 text-white">📊 Pokrok v réálném čase</p>
+                  <p className="font-bold text-lg mb-2 text-white">📊 Pokrok v reálném čase</p>
                   <p className="text-sm text-gray-100">Sledujte vaše zlepšování</p>
                 </div>
                 <div className="card-modern bg-white/10 glass-effect backdrop-blur border border-white/30 hover-lift p-6 transform transition-all">
@@ -125,7 +125,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
           <div className="text-center mb-16 md:mb-20 animate-fade-in-up">
             <span className="badge badge-primary mb-4 inline-block text-xs md:text-sm px-4 py-2">NAŠE SLUŽBY</span>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-snug">Najděte kurz pro vás</h2>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-snug">Najděte kurz pro Vás</h2>
             <p className="text-base md:text-lg text-gray-600 max-w-3xl mx-auto">Doučování, maturita i FCE příprava na jednom místě</p>
           </div>
 
@@ -165,7 +165,7 @@ export default function Home() {
                   <span className="text-3xl md:text-4xl flex-shrink-0 glow-pulse">👨‍🎓</span>
                   <div className="min-w-0">
                     <h3 className="font-bold text-base md:text-lg text-gray-900">Dlouholeté zkušenosti</h3>
-                    <p className="text-sm md:text-base text-gray-600">Dlouholetá praxe ve výuce angličtiny a přípravě k maturitě a testům FCE</p>
+                    <p className="text-sm md:text-base text-gray-600">Dlouholetá praxe ve výuce angličtiny a přípravě na maturitu a zkoušky FCE</p>
                   </div>
                 </div>
                 <div className="flex gap-4 hover-lift p-6 rounded-xl transition bg-white/50 border border-blue-100 shadow-soft hover:shadow-medium">
@@ -179,7 +179,7 @@ export default function Home() {
                   <span className="text-3xl md:text-4xl flex-shrink-0 glow-pulse">📈</span>
                   <div className="min-w-0">
                     <h3 className="font-bold text-base md:text-lg text-gray-900">Prokázané výsledky</h3>
-                    <p className="text-sm md:text-base text-gray-600">95% studentů dosahuje svých cílů</p>
+                    <p className="text-sm md:text-base text-gray-600">95 % studentů dosahuje svých cílů</p>
                   </div>
                 </div>
               </div>
@@ -188,7 +188,7 @@ export default function Home() {
             <div className="animate-slide-in-right">
               <div className="bg-gradient-to-br from-blue-900 to-red-700 text-white rounded-3xl p-8 md:p-12 text-center shadow-hard hover-lift transform transition-all">
                 <p className="text-7xl md:text-8xl mb-6 animate-bounce-slow">⭐</p>
-                <p className="text-5xl md:text-6xl font-black mb-2">4.9 / 5.0</p>
+                <p className="text-5xl md:text-6xl font-black mb-2">4,9 / 5,0</p>
                 <p className="text-lg md:text-xl mb-12 text-gray-100 font-semibold">Průměrné hodnocení od studentů</p>
                 
                 <div className="space-y-3 text-left">
@@ -196,7 +196,7 @@ export default function Home() {
                     <p className="font-semibold text-sm md:text-base">✓ "Mohu doporučit, kladné zkušenosti." - Aneta K.</p>
                   </div>
                   <div className="bg-white/10 glass-effect p-4 rounded-lg border border-white/20">
-                    <p className="font-semibold text-sm md:text-base">✓ "Velký progres za krátkou dobu" - David N.</p>
+                    <p className="font-semibold text-sm md:text-base">✓ "Velký pokrok za krátkou dobu" - David N.</p>
                   </div>
                   <div className="bg-white/10 glass-effect p-4 rounded-lg border border-white/20">
                     <p className="font-semibold text-sm md:text-base">✓ "Doporučuji všem přátelům!" - Petra C.</p>
@@ -269,7 +269,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-4 md:px-8 text-center relative z-10 animate-fade-in-up">
           <h2 className="text-4xl md:text-5xl font-black mb-6 leading-snug">Připraveni začít?</h2>
           <p className="text-lg md:text-xl text-gray-100 mb-10 leading-relaxed max-w-2xl mx-auto">
-            Zarezervujte si bezplatné konzultace a nechte se poradit ohledně vašich cílů
+            Zarezervujte si bezplatnou konzultaci a nechte se poradit ohledně vašich cílů
           </p>
           <div className="flex flex-col md:flex-row gap-4 justify-center">
             <Link to="/contact" className="btn-primary hover-shine px-8 py-4 text-base md:text-lg font-bold">

@@ -47,7 +47,7 @@ export default function Navbar() {
               English for All
             </span>
             <span className="text-xs md:text-sm font-bold bg-gradient-to-r from-blue-700 via-blue-600 to-red-600 bg-clip-text text-transparent">
-              Angličtina pro všechny
+              - Angličtina pro všechny
             </span>
           </div>
         </Link>
