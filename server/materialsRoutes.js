@@ -35,6 +35,11 @@ const normalizeFileName = (value = '') => {
   return `${safeBase || 'soubor'}${ext}`;
 };
 
+const displayFileName = (value = '') => {
+  const repaired = fixMojibake(value).trim();
+  return repaired || 'Soubor';
+};
+
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
@@ -74,7 +79,12 @@ router.get('/', async (req, res) => {
       result = await supabaseFetch(`/materials?lesson_id=eq.${encodeURIComponent(lessonId)}`);
     }
 
-    const materials = Array.isArray(result) ? result : [];
+    const materials = Array.isArray(result)
+      ? result.map((material) => ({
+          ...material,
+          file_name: displayFileName(material.file_name),
+        }))
+      : [];
     console.log(`[MATERIALS] Found ${materials.length} materials for lesson ${lessonId}`);
     res.json(materials);
   } catch (err) {
@@ -98,7 +108,7 @@ router.post('/', upload.single('file'), async (req, res) => {
     return res.status(400).json({ error: 'Nebyl nahrán žádný soubor' });
   }
 
-  const fileName = normalizeFileName(req.file.originalname);
+  const fileName = displayFileName(req.file.originalname);
   const fileUrl = `/uploads/${req.file.filename}`;
 
   try {
@@ -134,13 +144,14 @@ router.get('/:id/download', async (req, res) => {
     }
 
     const storedFileName = path.basename(material.file_url);
+    const downloadFileName = displayFileName(material.file_name || storedFileName);
     const absoluteFilePath = path.join(uploadsDir, storedFileName);
 
     if (!fs.existsSync(absoluteFilePath)) {
       return res.status(404).json({ error: 'Soubor nebyl nalezen' });
     }
 
-    return res.download(absoluteFilePath, material.file_name || storedFileName);
+    return res.download(absoluteFilePath, downloadFileName);
   } catch (err) {
     console.error('[MATERIALS] Download material error:', err.message, err.code);
     return res.status(500).json({ error: `Chyba při stahování materiálu: ${err.message}` });
