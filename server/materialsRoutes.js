@@ -1,14 +1,23 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
 const multer = require('multer');
+const { createClient } = require('@supabase/supabase-js');
 const { supabaseFetch } = require('./supabase');
 
 const router = express.Router();
 
+// Supabase Storage client
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+
+// In-memory storage for multer to get file in memory first
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+const BUCKET_NAME = 'lesson-materials';
+
 const fixMojibake = (value = '') => {
   const text = String(value || '');
-  // If UTF-8 text was interpreted as latin1 (e.g. "Ä"), try to repair it.
   if (/[ÃÄÅ]/.test(text)) {
     try {
       return Buffer.from(text, 'latin1').toString('utf8');
@@ -19,8 +28,13 @@ const fixMojibake = (value = '') => {
   return text;
 };
 
-const normalizeFileName = (value = '') => {
+const displayFileName = (value = '') => {
   const repaired = fixMojibake(value).trim();
+  return repaired || 'Soubor';
+};
+
+const generateStorageFileName = (originalName) => {
+  const repaired = fixMojibake(originalName).trim();
   const lastDotIndex = repaired.lastIndexOf('.');
   const base = lastDotIndex > 0 ? repaired.slice(0, lastDotIndex) : repaired;
   const ext = lastDotIndex > 0 ? repaired.slice(lastDotIndex).toLowerCase() : '';
@@ -32,28 +46,8 @@ const normalizeFileName = (value = '') => {
     .replace(/_+/g, '_')
     .replace(/^_+|_+$/g, '');
 
-  return `${safeBase || 'soubor'}${ext}`;
+  return `${Date.now()}-${safeBase || 'soubor'}${ext}`;
 };
-
-const displayFileName = (value = '') => {
-  const repaired = fixMojibake(value).trim();
-  return repaired || 'Soubor';
-};
-
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, callback) => callback(null, uploadsDir),
-  filename: (_req, file, callback) => {
-    const safeName = normalizeFileName(file.originalname);
-    callback(null, `${Date.now()}-${safeName}`);
-  },
-});
-
-const upload = multer({ storage });
 
 router.get('/', async (req, res) => {
   const { lesson_id: lessonId } = req.query;
@@ -74,8 +68,6 @@ router.get('/', async (req, res) => {
       if (!message.includes('created_at')) {
         throw orderError;
       }
-
-      // Backward compatibility for schemas without created_at column.
       result = await supabaseFetch(`/materials?lesson_id=eq.${encodeURIComponent(lessonId)}`);
     }
 
@@ -96,7 +88,7 @@ router.get('/', async (req, res) => {
 router.post('/', upload.single('file'), async (req, res) => {
   const { lesson_id: lessonId } = req.body;
 
-  console.log(`[MATERIALS] POST / - lesson_id: ${lessonId}, file: ${req.file?.filename || 'None'}`);
+  console.log(`[MATERIALS] POST / - lesson_id: ${lessonId}, file: ${req.file?.originalname || 'None'}`);
 
   if (!lessonId) {
     console.warn('[MATERIALS] POST / missing lesson_id');
@@ -108,15 +100,47 @@ router.post('/', upload.single('file'), async (req, res) => {
     return res.status(400).json({ error: 'Nebyl nahrán žádný soubor' });
   }
 
-  const fileName = displayFileName(req.file.originalname);
-  const fileUrl = `/uploads/${req.file.filename}`;
+  if (!supabase) {
+    console.error('[MATERIALS] POST / Supabase not configured');
+    return res.status(500).json({ error: 'Chyba: Storage není dostupný' });
+  }
+
+  const displayName = displayFileName(req.file.originalname);
+  const storageName = generateStorageFileName(req.file.originalname);
+  const storagePath = `${lessonId}/${storageName}`;
 
   try {
-    console.log(`[MATERIALS] Saving material metadata to Supabase: ${fileName} for lesson ${lessonId}`);
+    console.log(`[MATERIALS] Uploading file to Storage: ${storagePath}`);
+    
+    // Upload to Supabase Storage
+    const { data, error: uploadError } = await supabase.storage
+      .from(BUCKET_NAME)
+      .upload(storagePath, req.file.buffer, {
+        contentType: req.file.mimetype,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error('[MATERIALS] Storage upload error:', uploadError);
+      throw new Error(`Storage upload failed: ${uploadError.message}`);
+    }
+
+    // Get public URL for the file
+    const { data: publicUrlData } = supabase.storage
+      .from(BUCKET_NAME)
+      .getPublicUrl(storagePath);
+
+    const fileUrl = publicUrlData?.publicUrl || '';
+
+    console.log(`[MATERIALS] Saving material metadata to Supabase: ${displayName} for lesson ${lessonId}`);
     const result = await supabaseFetch('/materials', {
       method: 'POST',
       headers: { Prefer: 'return=representation' },
-      body: JSON.stringify({ lesson_id: lessonId, file_name: fileName, file_url: fileUrl }),
+      body: JSON.stringify({ 
+        lesson_id: lessonId, 
+        file_name: displayName, 
+        file_url: fileUrl 
+      }),
     });
 
     const material = Array.isArray(result) ? result[0] : result;
@@ -139,19 +163,18 @@ router.get('/:id/download', async (req, res) => {
       return res.status(404).json({ error: 'Materiál nebyl nalezen' });
     }
 
-    if (!material.file_url || !material.file_url.startsWith('/uploads/')) {
+    if (!material.file_url) {
       return res.status(400).json({ error: 'Materiál nelze stáhnout' });
     }
 
-    const storedFileName = path.basename(material.file_url);
-    const downloadFileName = displayFileName(material.file_name || storedFileName);
-    const absoluteFilePath = path.join(uploadsDir, storedFileName);
-
-    if (!fs.existsSync(absoluteFilePath)) {
-      return res.status(404).json({ error: 'Soubor nebyl nalezen' });
-    }
-
-    return res.download(absoluteFilePath, downloadFileName);
+    // Redirect to Supabase Storage public URL or proxy the download
+    const downloadFileName = displayFileName(material.file_name);
+    
+    // Set content disposition header for download
+    res.setHeader('Content-Disposition', `attachment; filename="${downloadFileName}"`);
+    
+    // Redirect to the file URL (browser will download it)
+    return res.redirect(material.file_url);
   } catch (err) {
     console.error('[MATERIALS] Download material error:', err.message, err.code);
     return res.status(500).json({ error: `Chyba při stahování materiálu: ${err.message}` });

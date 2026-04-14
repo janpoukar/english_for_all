@@ -67,20 +67,6 @@ npm run setup     # První instalace všech závisleností
 
 ---
 
-## 🧪 Test Credentials
-
-Pro testování aplikace můžete použít:
-
-**Student:**
-- Email: `zak@email.test`
-- Heslo: `password123`
-
-**Tutor (Lektorka):**
-- Email: `lektorka@email.test`
-- Heslo: `password123`
-
----
-
 ## 🌐 Nahrání na Railway (Produkce)
 
 **Úplný průvodce**: [RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md)
