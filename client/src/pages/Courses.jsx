@@ -5,37 +5,43 @@ import PageHeader from "../components/layout/PageHeader";
 export default function Courses() {
   const courses = [
     {
-      icon: "🌍",
+      imageSrc: "/pictures/begginer.jpg",
+      imageAlt: "Začátečníci - učební materiály",
       title: "Začátečníci (A1-A2)",
       description: "Naučte se základy angličtiny - slovní zásobu, gramatiku a jednoduché rozhovory.",
       features: ["Základní slovní zásoba", "Jednoduché věty", "Každodenní situace", "Výslovnost"]
     },
     {
-      icon: "📚",
+      imageSrc: "/pictures/advanced.jpg",
+      imageAlt: "Střední úroveň - pokročilejší výuka",
       title: "Střední úroveň (B1-B2)",
-      description: "Zlepšите se v psaní, čtení a mluvení. Lépe pochopíte angličtinu v různých kontextech.",
+      description: "Zlepšete se v psaní, čtení a mluvení. Lépe pochopíte angličtinu v různých kontextech.",
       features: ["Komplexní gramatika", "Akademické texty", "Diskuse a argumenty", "Psaní esejů"]
     },
     {
-      icon: "💼",
-      title: "Pokročilí (C1-C2)",
+      imageSrc: "/pictures/jihlava_center.png",
+      imageAlt: "Pokročilí kurz angličtiny",
+      title: "Pokročilí (C1+)",
       description: "Dosáhněte dokonalosti. Mluvte jako rodilý mluvčí a čtěte složité texty bez problémů.",
       features: ["Nuancované vyjadřování", "Odborné texty", "Kulturní kontexty", "Výtvarné psaní"]
     },
     {
-      icon: "🏢",
-      title: "Business Angličtina",
-      description: "Naučte se profesionální angličtinu pro práci, e-maily a obchodní jednání.",
-      features: ["Obchodní komunikace", "Profesionální e-maily", "Prezentace", "Jednání s obchodními partnery"]
+      imageSrc: "/pictures/graduation.png",
+      imageAlt: "Příprava k maturitě",
+      title: "Příprava k maturitě",
+      description: "Cílená příprava na maturitní zkoušku z angličtiny včetně modelových úloh.",
+      features: ["Poslech", "Čtení s porozuměním", "Psaní", "Ústní část a modelové otázky"]
     },
     {
-      icon: "🎓",
+      imageSrc: "/pictures/fce.png",
+      imageAlt: "Příprava na jazykové testy",
       title: "Příprava testů (TOEFL, IELTS)",
       description: "Intenzivní příprava k mezinárodním testům s garantovanými výsledky.",
       features: ["Strategie testů", "Praxe se starými testy", "Časové management", "Mock zkoušky"]
     },
     {
-      icon: "🎬",
+      imageSrc: "/pictures/doucovani.png",
+      imageAlt: "Konverzační kurz angličtiny",
       title: "Konverzační Kurzy",
       description: "Zaměřte se na mluvení a porozumění angličtině v různých oblastech.",
       features: ["Aktivní diskuse", "Kulturní témata", "Zvukové materiály", "Filmové scény"]
