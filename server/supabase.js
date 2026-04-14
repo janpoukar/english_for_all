@@ -101,6 +101,8 @@ const SUPABASE_RESOLVED_HOST = (() => {
   }
 })();
 
+const SUPABASE_PROJECT_REF = SUPABASE_RESOLVED_HOST ? String(SUPABASE_RESOLVED_HOST).split('.')[0] : null;
+
 const pickFirstEnv = (keys) => {
   for (const key of keys) {
     const value = process.env[key];
@@ -144,6 +146,7 @@ const buildServiceRoleToken = () => {
       iss: 'supabase',
       aud: 'authenticated',
       sub: 'service_role',
+      ref: SUPABASE_PROJECT_REF,
     },
     SUPABASE_JWT_SECRET,
     {
@@ -156,8 +159,8 @@ const buildServiceRoleToken = () => {
 };
 
 const SUPABASE_AUTH = buildServiceRoleToken();
-const SUPABASE_API_KEY = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY || null;
-const SUPABASE_AUTH_TOKEN = SUPABASE_AUTH.token || SUPABASE_API_KEY;
+const SUPABASE_API_KEY = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_AUTH.token || SUPABASE_ANON_KEY || null;
+const SUPABASE_AUTH_TOKEN = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_AUTH.token || SUPABASE_API_KEY;
 
 const SUPABASE_ENV_PRESENT = {
   SUPABASE_URL: Boolean(process.env.SUPABASE_URL),
