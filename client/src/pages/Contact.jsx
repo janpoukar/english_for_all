@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
+const API_BASE = import.meta.env.VITE_API_BASE || "/api";
+
 export default function Contact() {
   const [formData, setFormData] = useState({
     name: "",
@@ -8,8 +10,10 @@ export default function Contact() {
     phone: "",
     subject: "",
     message: "",
-    courseType: "Individuální"
+    courseType: "Individuální lekce"
   });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
   const handleChange = (e) => {
     setFormData({
@@ -18,11 +22,34 @@ export default function Contact() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form data:", formData);
-    alert("Děkujeme za váš zájem! Brzy se vám ozveme.");
-    setFormData({ name: "", email: "", phone: "", subject: "", message: "", courseType: "Individuální" });
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const response = await fetch(`${API_BASE}/contact`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setMessage("✅ " + (result.message || "Zpráva byla úspěšně odeslána!"));
+        setFormData({ name: "", email: "", phone: "", subject: "", message: "", courseType: "Individuální lekce" });
+      } else {
+        setMessage("❌ " + (result.error || "Nepodařilo se odeslat zprávu. Zkuste to prosím později."));
+      }
+    } catch (err) {
+      console.error("Contact form error:", err);
+      setMessage("❌ Chyba při odesílání. Zkuste to prosím později.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -87,6 +114,12 @@ export default function Contact() {
               <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-8 border border-gray-100 shadow-medium">
                 <h3 className="text-2xl font-bold text-gray-900 mb-6">Odešlete nám zprávu</h3>
 
+                {message && (
+                  <div className={`rounded-lg p-3 mb-6 ${message.startsWith("✅") ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
+                    {message}
+                  </div>
+                )}
+
                 <div className="space-y-5 mb-6">
                   <div>
                     <label className="block text-gray-700 font-semibold mb-2 text-sm">Jméno *</label>
@@ -134,9 +167,9 @@ export default function Contact() {
                       onChange={handleChange}
                       className="form-select"
                     >
-                      <option>Individuální výuka</option>
+                      <option>Individuální lekce</option>
                       <option>Skupinový kurz</option>
-                      <option>Online lekce</option>
+                      <option>Doučování ve firmách</option>
                       <option>Business angličtina</option>
                       <option>Příprava testů</option>
                       <option>Nevím, pomoc!</option>
@@ -171,10 +204,11 @@ export default function Contact() {
                 </div>
 
                 <button 
-                  type="submit" 
-                  className="w-full btn-primary font-bold py-4 text-lg"
+                  type="submit"
+                  disabled={loading}
+                  className="w-full btn-primary font-bold py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Odeslat zprávu
+                  {loading ? "Odesílám..." : "Odeslat zprávu"}
                 </button>
 
                 <p className="text-sm text-gray-600 text-center mt-4 font-medium">Odpovídáme do 24 hodin, obvykle dříve!</p>
