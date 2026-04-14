@@ -60,28 +60,28 @@ export default function Footer() {
               <h4 className="font-bold mb-6 text-lg text-white">Služby</h4>
               <ul className="space-y-3">
                 <li>
-                  <a href="#" className="text-gray-300 hover:text-white transition-all relative group font-medium text-sm">
+                  <Link to="/contact" className="text-gray-300 hover:text-white transition-all relative group font-medium text-sm">
                     Individuální výuka
                     <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-orange-500 group-hover:w-full transition-all duration-300"></span>
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-300 hover:text-white transition-all relative group font-medium text-sm">
+                  <Link to="/courses" className="text-gray-300 hover:text-white transition-all relative group font-medium text-sm">
                     Skupinové kurzy
                     <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-orange-500 group-hover:w-full transition-all duration-300"></span>
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-300 hover:text-white transition-all relative group font-medium text-sm">
+                  <Link to="/courses" className="text-gray-300 hover:text-white transition-all relative group font-medium text-sm">
                     Online lekce
                     <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-orange-500 group-hover:w-full transition-all duration-300"></span>
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-300 hover:text-white transition-all relative group font-medium text-sm">
+                  <Link to="/courses" className="text-gray-300 hover:text-white transition-all relative group font-medium text-sm">
                     Business angličtina
                     <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-orange-500 group-hover:w-full transition-all duration-300"></span>
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
