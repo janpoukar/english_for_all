@@ -22,6 +22,7 @@ const upload = multer({ storage });
 
 const BUCKET_NAME = 'lesson-materials';
 let bucketReady = false;
+const MAX_EMBEDDED_FILE_BYTES = 4 * 1024 * 1024;
 
 const ensureStorageBucket = async () => {
   if (!supabase || bucketReady) return;
@@ -90,6 +91,26 @@ const extractStoragePath = (fileUrl = '') => {
   return '';
 };
 
+const toDataUrl = (buffer, mimeType) => {
+  const safeMimeType = String(mimeType || 'application/octet-stream');
+  return `data:${safeMimeType};base64,${buffer.toString('base64')}`;
+};
+
+const parseDataUrl = (value = '') => {
+  const text = String(value || '');
+  const match = text.match(/^data:([^;]+);base64,(.+)$/);
+  if (!match) return null;
+
+  try {
+    return {
+      mimeType: match[1] || 'application/octet-stream',
+      buffer: Buffer.from(match[2], 'base64'),
+    };
+  } catch {
+    return null;
+  }
+};
+
 router.get('/', async (req, res) => {
   const { lesson_id: lessonId } = req.query;
 
@@ -153,32 +174,42 @@ router.post('/', upload.single('file'), async (req, res) => {
   try {
     console.log(`[MATERIALS] Uploading file to Storage: ${storagePath}`);
 
-    let uploadResult = await supabase.storage
-      .from(BUCKET_NAME)
-      .upload(storagePath, req.file.buffer, {
-        contentType: req.file.mimetype,
-        upsert: false,
-      });
+    let fileUrl = '';
 
-    let uploadError = uploadResult.error;
-
-    if (uploadError && /bucket\s+not\s+found/i.test(String(uploadError.message || ''))) {
-      await ensureStorageBucket();
-      uploadResult = await supabase.storage
+    if (supabase) {
+      let uploadResult = await supabase.storage
         .from(BUCKET_NAME)
         .upload(storagePath, req.file.buffer, {
           contentType: req.file.mimetype,
           upsert: false,
         });
-      uploadError = uploadResult.error;
+
+      let uploadError = uploadResult.error;
+
+      if (uploadError && /bucket\s+not\s+found/i.test(String(uploadError.message || ''))) {
+        await ensureStorageBucket();
+        uploadResult = await supabase.storage
+          .from(BUCKET_NAME)
+          .upload(storagePath, req.file.buffer, {
+            contentType: req.file.mimetype,
+            upsert: false,
+          });
+        uploadError = uploadResult.error;
+      }
+
+      if (!uploadError) {
+        fileUrl = `storage://${BUCKET_NAME}/${storagePath}`;
+      } else {
+        console.warn('[MATERIALS] Storage upload warning, using DB fallback:', uploadError.message);
+      }
     }
 
-    if (uploadError) {
-      console.error('[MATERIALS] Storage upload error:', uploadError);
-      throw new Error(`Storage upload failed: ${uploadError.message}`);
+    if (!fileUrl) {
+      if ((req.file.size || req.file.buffer?.length || 0) > MAX_EMBEDDED_FILE_BYTES) {
+        throw new Error('Soubor je příliš velký pro uložení do databáze bez Storage');
+      }
+      fileUrl = toDataUrl(req.file.buffer, req.file.mimetype);
     }
-
-    const fileUrl = `storage://${BUCKET_NAME}/${storagePath}`;
 
     console.log(`[MATERIALS] Saving material metadata to Supabase: ${displayName} for lesson ${lessonId}`);
     const result = await supabaseFetch('/materials', {
@@ -251,6 +282,14 @@ router.get('/:id/download', async (req, res) => {
     }
 
     const downloadFileName = displayFileName(material.file_name);
+    const embeddedData = parseDataUrl(material.file_url);
+
+    if (embeddedData) {
+      res.setHeader('Content-Type', embeddedData.mimeType);
+      res.setHeader('Content-Disposition', `attachment; filename="${downloadFileName}"`);
+      return res.send(embeddedData.buffer);
+    }
+
     const storagePath = extractStoragePath(material.file_url);
 
     if (storagePath) {
