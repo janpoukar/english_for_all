@@ -51,6 +51,8 @@ const createTransport = (smtpConfig = {}) => {
     port,
     secure,
     auth: { user, pass },
+    connectionTimeout: 10000,
+    socketTimeout: 10000,
   });
 };
 
@@ -62,48 +64,56 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Vyplň prosím jméno, e-mail, předmět a zprávu' });
     }
 
-    const smtpSettings = getSmtpSettings();
-    const transport = createTransport(smtpSettings);
+    // Send email in background without waiting
+    setImmediate(async () => {
+      try {
+        const smtpSettings = getSmtpSettings();
+        const transport = createTransport(smtpSettings);
 
-    const htmlContent = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border-radius: 8px;">
-        <h2 style="color: #1e3a8a; margin-bottom: 20px;">Nová zpráva z webu</h2>
-        
-        <div style="background-color: white; padding: 15px; margin-bottom: 15px; border-radius: 5px;">
-          <p style="margin: 5px 0;"><strong>Jméno:</strong> ${String(name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
-          <p style="margin: 5px 0;"><strong>E-mail:</strong> ${String(email || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
-          <p style="margin: 5px 0;"><strong>Telefon:</strong> ${String(phone || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') || 'Neuvedeno'}</p>
-          <p style="margin: 5px 0;"><strong>Typ kurzu:</strong> ${String(courseType || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') || 'Neuvedeno'}</p>
-          <p style="margin: 5px 0;"><strong>Předmět:</strong> ${String(subject || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
-        </div>
+        const htmlContent = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border-radius: 8px;">
+            <h2 style="color: #1e3a8a; margin-bottom: 20px;">Nová zpráva z webu</h2>
+            
+            <div style="background-color: white; padding: 15px; margin-bottom: 15px; border-radius: 5px;">
+              <p style="margin: 5px 0;"><strong>Jméno:</strong> ${String(name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+              <p style="margin: 5px 0;"><strong>E-mail:</strong> ${String(email || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+              <p style="margin: 5px 0;"><strong>Telefon:</strong> ${String(phone || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') || 'Neuvedeno'}</p>
+              <p style="margin: 5px 0;"><strong>Typ kurzu:</strong> ${String(courseType || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') || 'Neuvedeno'}</p>
+              <p style="margin: 5px 0;"><strong>Předmět:</strong> ${String(subject || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+            </div>
 
-        <div style="background-color: white; padding: 15px; border-radius: 5px; border-left: 4px solid #1e3a8a;">
-          <h3 style="color: #1e3a8a; margin-top: 0;">Zpráva:</h3>
-          <p style="white-space: pre-wrap; color: #333;">${String(message || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
-        </div>
+            <div style="background-color: white; padding: 15px; border-radius: 5px; border-left: 4px solid #1e3a8a;">
+              <h3 style="color: #1e3a8a; margin-top: 0;">Zpráva:</h3>
+              <p style="white-space: pre-wrap; color: #333;">${String(message || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+            </div>
 
-        <p style="margin-top: 20px; font-size: 12px; color: #666; text-align: center;">Tato zpráva byla odeslána z webu English for All</p>
-      </div>
-    `;
+            <p style="margin-top: 20px; font-size: 12px; color: #666; text-align: center;">Tato zpráva byla odeslána z webu English for All</p>
+          </div>
+        `;
 
-    const info = await transport.sendMail({
-      from: smtpSettings.from || smtpSettings.user,
-      to: contactEmail,
-      replyTo: email,
-      subject: `[English for All] ${subject}`,
-      html: htmlContent,
+        await transport.sendMail({
+          from: smtpSettings.from || smtpSettings.user,
+          to: contactEmail,
+          replyTo: email,
+          subject: `[English for All] ${subject}`,
+          html: htmlContent,
+        });
+
+        console.log(`Contact form email sent successfully`);
+      } catch (err) {
+        console.error('Background email send failed:', err.message);
+      }
     });
 
-    console.log(`Contact form email sent:`, info.messageId);
-
+    // Return success immediately without waiting for email
     res.json({
       success: true,
-      message: 'Zpráva byla úspěšně odeslána. Brzy se vám ozveme!',
+      message: 'Zpráva byla odeslána. Brzy se vám ozveme!',
     });
   } catch (err) {
     console.error('Contact form error:', err);
     res.status(500).json({
-      error: err.message || 'Nepodařilo se odeslat zprávu',
+      error: err.message || 'Nepodařilo se zpracovat zprávu',
     });
   }
 });
