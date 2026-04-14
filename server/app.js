@@ -19,12 +19,18 @@ app.get('/api/health', async (req, res) => {
   const supabase = getSupabaseDiagnostics();
   const database = typeof pool.getDatabaseDiagnostics === 'function' ? pool.getDatabaseDiagnostics() : null;
   let postgresReachable = false;
+  let postgresError = null;
 
   try {
     await pool.query('SELECT 1');
     postgresReachable = true;
-  } catch {
+  } catch (err) {
     postgresReachable = false;
+    postgresError = err ? {
+      message: err.message || '',
+      code: err.code || null,
+      name: err.name || null,
+    } : null;
   }
 
   res.status(200).json({
@@ -32,6 +38,7 @@ app.get('/api/health', async (req, res) => {
     supabase,
     database,
     postgresReachable,
+    postgresError,
   });
 });
 

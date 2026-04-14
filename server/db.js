@@ -53,8 +53,15 @@ poolConfig.idleTimeoutMillis = 30000; // 30 sekund idle timeout
 const pool = new Pool(poolConfig);
 console.log(`[PG] connection source: ${connectionStringCandidate.key || 'none'} | hasConnection: ${Boolean(connectionString)}`);
 
+let lastPoolError = null;
+
 // Better error handling
 pool.on('error', (err) => {
+  lastPoolError = err ? {
+    message: err.message || '',
+    code: err.code || null,
+    name: err.name || null,
+  } : null;
   console.error('Unexpected error on idle client', err);
 });
 
@@ -90,6 +97,7 @@ const initializeSchema = async () => {
 const getDatabaseDiagnostics = () => ({
   connectionSource: connectionStringCandidate.key,
   hasConnectionString: Boolean(connectionString),
+  lastPoolError,
 });
 
 // Run schema initialization when module loads
