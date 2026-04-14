@@ -59,7 +59,7 @@ export default function Gallery() {
           <div className="grid md:grid-cols-4 gap-8">
             {[
               { icon: "🏫", title: "Učebna v centru města Jihlavy", desc: "Pohodlná dostupnost v centru města" },
-              { icon: "📺", title: "Audiovizuální vybavení", desc: "Interaktivní tabule a kvalitní technologie pro lepší výuku" },
+              { icon: "🖥️", title: "Audiovizuální vybavení", desc: "Učebna disponuje obrazovkou pro přehrávání videí a reproduktory pro poslechy" },
               { icon: "📚", title: "Vybavená učebna pro výuku", desc: "Příjemné prostředí vybavené pro výuku" },
               { icon: "🎯", title: "Příprava na různé zkoušky", desc: "Individuální pokrok a zpětnou vazbu na každé lekci" }
             ].map((item, idx) => (

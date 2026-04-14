@@ -53,7 +53,6 @@ export default function Login() {
             <h1 className="text-3xl font-black bg-gradient-to-r from-blue-700 to-red-600 bg-clip-text text-transparent">
               English for All
             </h1>
-            <p className="text-gray-600 text-sm mt-2">Přihlášení do systému přes skutečný účet</p>
           </div>
 
           {/* Form */}
