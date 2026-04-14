@@ -6,6 +6,35 @@ const { supabaseFetch } = require('./supabase');
 
 const router = express.Router();
 
+const fixMojibake = (value = '') => {
+  const text = String(value || '');
+  // If UTF-8 text was interpreted as latin1 (e.g. "Ä"), try to repair it.
+  if (/[ÃÄÅ]/.test(text)) {
+    try {
+      return Buffer.from(text, 'latin1').toString('utf8');
+    } catch {
+      return text;
+    }
+  }
+  return text;
+};
+
+const normalizeFileName = (value = '') => {
+  const repaired = fixMojibake(value).trim();
+  const lastDotIndex = repaired.lastIndexOf('.');
+  const base = lastDotIndex > 0 ? repaired.slice(0, lastDotIndex) : repaired;
+  const ext = lastDotIndex > 0 ? repaired.slice(lastDotIndex).toLowerCase() : '';
+
+  const safeBase = base
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9_-]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+  return `${safeBase || 'soubor'}${ext}`;
+};
+
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
@@ -14,7 +43,7 @@ if (!fs.existsSync(uploadsDir)) {
 const storage = multer.diskStorage({
   destination: (_req, _file, callback) => callback(null, uploadsDir),
   filename: (_req, file, callback) => {
-    const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const safeName = normalizeFileName(file.originalname);
     callback(null, `${Date.now()}-${safeName}`);
   },
 });
@@ -69,7 +98,7 @@ router.post('/', upload.single('file'), async (req, res) => {
     return res.status(400).json({ error: 'Nebyl nahrán žádný soubor' });
   }
 
-  const fileName = req.file.originalname;
+  const fileName = normalizeFileName(req.file.originalname);
   const fileUrl = `/uploads/${req.file.filename}`;
 
   try {
