@@ -689,9 +689,8 @@ export default function TutorDashboard() {
       due_date: assignment.due_date || selectedLesson?.date || "",
       status: assignment.status || "probiha",
       _original: {
-        id: assignment.id,
-        title: assignment.title || "",
-        lesson_id: selectedLesson?.id || assignment.lesson_id || null,
+        ...assignment,
+        lesson_id: selectedLesson?.id || assignment.lesson_id || assignment.lessonId || null,
       },
     });
   };

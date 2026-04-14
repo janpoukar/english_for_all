@@ -253,9 +253,20 @@ export const getMaterialDownloadUrl = (materialId) => {
 const normalizeAssignment = (assignment) => {
   if (!assignment || typeof assignment !== "object") return assignment;
 
+  const knownId = assignment.id || assignment.assignment_id || assignment.task_id;
+  const discoveredId =
+    knownId ||
+    Object.entries(assignment).find(([key, value]) => {
+      if (value === null || value === undefined || value === "") return false;
+      const normalizedKey = String(key || "").toLowerCase();
+      if (normalizedKey === "lesson_id") return false;
+      return normalizedKey.endsWith("id");
+    })?.[1] ||
+    null;
+
   return {
     ...assignment,
-    id: assignment.id || assignment.assignment_id || assignment.task_id || null,
+    id: discoveredId,
     status: (assignment.status || "probiha").toLowerCase(),
   };
 };

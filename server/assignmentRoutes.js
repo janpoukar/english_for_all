@@ -33,8 +33,21 @@ const writeStatusStore = (store) => {
   fs.writeFileSync(ASSIGNMENT_STATUS_STORE_PATH, JSON.stringify(store, null, 2));
 };
 
-const getAssignmentId = (assignment) =>
-  assignment?.id || assignment?.assignment_id || assignment?.task_id || null;
+const getAssignmentId = (assignment) => {
+  if (!assignment || typeof assignment !== 'object') return null;
+
+  const known = assignment.id || assignment.assignment_id || assignment.task_id;
+  if (known) return known;
+
+  const discovered = Object.entries(assignment).find(([key, value]) => {
+    if (value === null || value === undefined || value === '') return false;
+    const normalizedKey = String(key || '').toLowerCase();
+    if (normalizedKey === 'lesson_id') return false;
+    return normalizedKey.endsWith('id');
+  });
+
+  return discovered ? discovered[1] : null;
+};
 
 const isMissingColumnError = (err, columnName) => {
   const message = String(err?.message || '').toLowerCase();
