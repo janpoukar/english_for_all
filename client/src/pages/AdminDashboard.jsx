@@ -8,8 +8,10 @@ import {
   deleteUser,
   fetchLessons,
   fetchNewsletterSettings,
+  fetchNewsletterSmtp,
   fetchUsers,
   saveNewsletterSettings,
+  saveNewsletterSmtp,
   sendNewsletterCampaign,
   updateLesson,
   updateUser,
@@ -34,7 +36,19 @@ export default function AdminDashboard() {
   const [newsletterSettings, setNewsletterSettings] = useState(defaultNewsletterSettings);
   const [newsletterLoading, setNewsletterLoading] = useState(false);
   const [newsletterSaving, setNewsletterSaving] = useState(false);
+  const [smtpLoading, setSmtpLoading] = useState(false);
+  const [smtpSaving, setSmtpSaving] = useState(false);
   const [newsletterMessage, setNewsletterMessage] = useState("");
+  const [smtpMessage, setSmtpMessage] = useState("");
+  const [smtpSettings, setSmtpSettings] = useState({
+    host: "",
+    port: 587,
+    secure: false,
+    user: "",
+    pass: "",
+    from: "",
+    hasPassword: false,
+  });
   const [newsletterCampaign, setNewsletterCampaign] = useState({
     subject: "",
     preheader: "",
@@ -76,6 +90,7 @@ export default function AdminDashboard() {
 
     loadData();
     loadNewsletterSettings();
+    loadNewsletterSmtp();
   }, [navigate]);
 
   const loadNewsletterSettings = async () => {
@@ -102,6 +117,23 @@ export default function AdminDashboard() {
       setError(err.message || "Nepodařilo se načíst data");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadNewsletterSmtp = async () => {
+    try {
+      setSmtpLoading(true);
+      const token = localStorage.getItem("authToken");
+      const smtp = await fetchNewsletterSmtp(token);
+      setSmtpSettings((prev) => ({
+        ...prev,
+        ...smtp,
+        pass: "",
+      }));
+    } catch (err) {
+      setSmtpMessage("❌ " + (err.message || "Nepodařilo se načíst SMTP nastavení"));
+    } finally {
+      setSmtpLoading(false);
     }
   };
 
@@ -278,6 +310,31 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleSaveSmtpSettings = async () => {
+    try {
+      setSmtpSaving(true);
+      setSmtpMessage("");
+      const token = localStorage.getItem("authToken");
+      const payload = {
+        host: smtpSettings.host,
+        port: smtpSettings.port,
+        secure: smtpSettings.secure,
+        user: smtpSettings.user,
+        pass: smtpSettings.pass,
+        from: smtpSettings.from,
+      };
+
+      const saved = await saveNewsletterSmtp(payload, token);
+      setSmtpSettings((prev) => ({ ...prev, ...saved, pass: "" }));
+      setSmtpMessage("✅ SMTP nastavení bylo uloženo.");
+      setTimeout(() => setSmtpMessage(""), 3000);
+    } catch (err) {
+      setSmtpMessage("❌ " + (err.message || "Nepodařilo se uložit SMTP nastavení"));
+    } finally {
+      setSmtpSaving(false);
+    }
+  };
+
   if (!user) return null;
 
   if (loading) {
@@ -364,6 +421,88 @@ export default function AdminDashboard() {
               className="px-4 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-semibold disabled:opacity-50"
             >
               {newsletterSaving ? "Ukládám..." : "Uložit newsletter"}
+            </button>
+          </div>
+        </section>
+
+        <section className="bg-white rounded-xl border border-slate-200 p-4 md:p-5">
+          <h2 className="text-xl font-bold text-slate-900 mb-4">SMTP přihlášení pro newsletter</h2>
+
+          {smtpMessage && (
+            <div className={`rounded-lg p-3 mb-4 ${smtpMessage.startsWith("✅") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+              {smtpMessage}
+            </div>
+          )}
+
+          {smtpLoading && <p className="text-sm text-slate-500 mb-3">Načítám SMTP nastavení...</p>}
+
+          <div className="grid md:grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm font-semibold text-slate-700">SMTP host</label>
+              <input
+                className="form-input mt-1"
+                value={smtpSettings.host}
+                onChange={(event) => setSmtpSettings((prev) => ({ ...prev, host: event.target.value }))}
+                placeholder="smtp.gmail.com"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-slate-700">SMTP port</label>
+              <input
+                className="form-input mt-1"
+                value={smtpSettings.port}
+                onChange={(event) => setSmtpSettings((prev) => ({ ...prev, port: Number(event.target.value) || 587 }))}
+                placeholder="587"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-slate-700">SMTP uživatel (email)</label>
+              <input
+                className="form-input mt-1"
+                value={smtpSettings.user}
+                onChange={(event) => setSmtpSettings((prev) => ({ ...prev, user: event.target.value }))}
+                placeholder="newsletter@domena.cz"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-slate-700">Odesílatel (From)</label>
+              <input
+                className="form-input mt-1"
+                value={smtpSettings.from}
+                onChange={(event) => setSmtpSettings((prev) => ({ ...prev, from: event.target.value }))}
+                placeholder="English for All <newsletter@domena.cz>"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-sm font-semibold text-slate-700">
+                SMTP heslo {smtpSettings.hasPassword ? "(ponech prázdné pro zachování)" : ""}
+              </label>
+              <input
+                type="password"
+                className="form-input mt-1"
+                value={smtpSettings.pass}
+                onChange={(event) => setSmtpSettings((prev) => ({ ...prev, pass: event.target.value }))}
+                placeholder="SMTP heslo nebo app password"
+              />
+            </div>
+            <div className="md:col-span-2 flex items-center gap-2 mt-1">
+              <input
+                id="smtp-secure"
+                type="checkbox"
+                checked={smtpSettings.secure}
+                onChange={(event) => setSmtpSettings((prev) => ({ ...prev, secure: event.target.checked }))}
+              />
+              <label htmlFor="smtp-secure" className="text-sm text-slate-700">Použít secure SMTP (obvykle port 465)</label>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <button
+              onClick={handleSaveSmtpSettings}
+              disabled={smtpSaving}
+              className="px-4 py-2 rounded-lg bg-indigo-700 hover:bg-indigo-800 text-white font-semibold disabled:opacity-50"
+            >
+              {smtpSaving ? "Ukládám SMTP..." : "Uložit SMTP"}
             </button>
           </div>
         </section>

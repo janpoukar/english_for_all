@@ -561,6 +561,39 @@ export const saveNewsletterSettings = async (settings, token) => {
   }
 };
 
+export const fetchNewsletterSmtp = async (token) => {
+  try {
+    const response = await fetch(`${API_BASE}/newsletter/smtp`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return await parseJsonResponse(response, "Nepodařilo se načíst SMTP nastavení");
+  } catch (error) {
+    console.error("Error fetching SMTP settings:", error);
+    throw error;
+  }
+};
+
+export const saveNewsletterSmtp = async (smtpConfig, token) => {
+  try {
+    const response = await fetch(`${API_BASE}/newsletter/smtp`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(smtpConfig),
+    });
+
+    return await parseJsonResponse(response, "Nepodařilo se uložit SMTP nastavení");
+  } catch (error) {
+    console.error("Error saving SMTP settings:", error);
+    throw error;
+  }
+};
+
 export const subscribeNewsletter = async (email) => {
   try {
     const response = await fetch(`${API_BASE}/newsletter/subscribe`, {

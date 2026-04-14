@@ -14,6 +14,15 @@ const DEFAULT_SETTINGS = {
   buttonText: 'Přihlásit',
 };
 
+const DEFAULT_SMTP = {
+  host: '',
+  port: 587,
+  secure: false,
+  user: '',
+  pass: '',
+  from: '',
+};
+
 const DATA_DIR = path.join(__dirname, 'data');
 const NEWSLETTER_STORE_PATH = path.join(DATA_DIR, 'newsletter.json');
 
@@ -28,6 +37,7 @@ const ensureStore = () => {
       JSON.stringify(
         {
           settings: DEFAULT_SETTINGS,
+          smtp: DEFAULT_SMTP,
           subscribers: [],
           campaigns: [],
         },
@@ -48,12 +58,17 @@ const readStore = () => {
         ...DEFAULT_SETTINGS,
         ...(parsed.settings || {}),
       },
+      smtp: {
+        ...DEFAULT_SMTP,
+        ...(parsed.smtp || {}),
+      },
       subscribers: Array.isArray(parsed.subscribers) ? parsed.subscribers : [],
       campaigns: Array.isArray(parsed.campaigns) ? parsed.campaigns : [],
     };
   } catch {
     return {
       settings: DEFAULT_SETTINGS,
+      smtp: DEFAULT_SMTP,
       subscribers: [],
       campaigns: [],
     };
@@ -77,11 +92,15 @@ const sanitizeUrl = (value) => {
   }
 };
 
-const createTransport = () => {
-  const host = process.env.SMTP_HOST;
-  const port = Number(process.env.SMTP_PORT || 587);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
+const createTransport = (smtpConfig = {}) => {
+  const host = smtpConfig.host || process.env.SMTP_HOST;
+  const port = Number(smtpConfig.port || process.env.SMTP_PORT || 587);
+  const user = smtpConfig.user || process.env.SMTP_USER;
+  const pass = smtpConfig.pass || process.env.SMTP_PASS;
+  const secure =
+    typeof smtpConfig.secure === 'boolean'
+      ? smtpConfig.secure
+      : String(process.env.SMTP_SECURE || 'false') === 'true';
 
   if (!host || !user || !pass) {
     throw new Error('Chybí SMTP konfigurace (SMTP_HOST, SMTP_USER, SMTP_PASS)');
@@ -90,9 +109,17 @@ const createTransport = () => {
   return nodemailer.createTransport({
     host,
     port,
-    secure: String(process.env.SMTP_SECURE || 'false') === 'true',
+    secure,
     auth: { user, pass },
   });
+};
+
+const getSmtpSettings = () => {
+  const store = readStore();
+  return {
+    ...DEFAULT_SMTP,
+    ...(store.smtp || {}),
+  };
 };
 
 const buildNewsletterHtml = ({ subject, preheader, imageUrl, imageAlt, body, ctaText, ctaUrl }) => {
@@ -190,6 +217,69 @@ router.put('/settings', verifyAdmin, async (req, res) => {
   }
 });
 
+router.get('/smtp', verifyAdmin, async (_req, res) => {
+  try {
+    const smtp = getSmtpSettings();
+    res.json({
+      host: smtp.host || '',
+      port: Number(smtp.port || 587),
+      secure: Boolean(smtp.secure),
+      user: smtp.user || '',
+      from: smtp.from || '',
+      hasPassword: Boolean(smtp.pass),
+    });
+  } catch (err) {
+    console.error('Fetch SMTP settings error:', err);
+    res.status(500).json({ error: 'Nepodařilo se načíst SMTP nastavení' });
+  }
+});
+
+router.put('/smtp', verifyAdmin, async (req, res) => {
+  try {
+    const host = String(req.body?.host || '').trim();
+    const user = String(req.body?.user || '').trim();
+    const from = String(req.body?.from || '').trim();
+    const passInput = String(req.body?.pass || '').trim();
+    const secure = req.body?.secure === true;
+    const parsedPort = Number(req.body?.port || 587);
+    const port = Number.isFinite(parsedPort) && parsedPort > 0 ? parsedPort : 587;
+
+    const store = readStore();
+    const current = {
+      ...DEFAULT_SMTP,
+      ...(store.smtp || {}),
+    };
+
+    const next = {
+      host,
+      user,
+      from,
+      port,
+      secure,
+      pass: passInput || current.pass || '',
+    };
+
+    if (!next.host || !next.user || !next.pass) {
+      return res.status(400).json({ error: 'Vyplň SMTP host, uživatele a heslo' });
+    }
+
+    store.smtp = next;
+    writeStore(store);
+
+    res.json({
+      host: next.host,
+      port: next.port,
+      secure: next.secure,
+      user: next.user,
+      from: next.from,
+      hasPassword: Boolean(next.pass),
+    });
+  } catch (err) {
+    console.error('Save SMTP settings error:', err);
+    res.status(500).json({ error: 'Nepodařilo se uložit SMTP nastavení' });
+  }
+});
+
 router.post('/subscribe', async (req, res) => {
   try {
     const email = String(req.body?.email || '').trim().toLowerCase();
@@ -246,8 +336,9 @@ router.post('/send', verifyAdmin, async (req, res) => {
       return res.status(400).json({ error: 'V databázi nejsou žádní uživatelé s e-mailem' });
     }
 
-    const transport = createTransport();
-    const fromAddress = process.env.MAIL_FROM || process.env.SMTP_USER;
+    const smtpSettings = getSmtpSettings();
+    const transport = createTransport(smtpSettings);
+    const fromAddress = smtpSettings.from || process.env.MAIL_FROM || smtpSettings.user || process.env.SMTP_USER;
     const html = buildNewsletterHtml({ subject, preheader, imageUrl, imageAlt, body, ctaText, ctaUrl });
 
     const sendResults = [];
