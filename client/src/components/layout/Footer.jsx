@@ -92,7 +92,7 @@ export default function Footer() {
               <ul className="space-y-4">
                 <li className="text-gray-300 hover:text-white transition group">
                   <span className="block font-bold text-white mb-1 text-sm group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-orange-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">Adresa</span>
-                  <span className="text-xs text-gray-400">Křížová 123, Jihlava</span>
+                  <span className="text-xs text-gray-400">Křížová, Jihlava</span>
                 </li>
                 <li className="text-gray-300 hover:text-white transition group">
                   <span className="block font-bold text-white mb-1 text-sm group-hover:bg-gradient-to-r group-hover:from-blue-400 group-hover:to-orange-400 group-hover:bg-clip-text group-hover:text-transparent transition-all">Telefon</span>

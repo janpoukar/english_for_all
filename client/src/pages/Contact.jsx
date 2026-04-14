@@ -79,7 +79,7 @@ export default function Contact() {
                   <div className="text-4xl">📍</div>
                   <div>
                     <h3 className="font-bold text-xl text-gray-800 mb-2">Adresa</h3>
-                    <p className="text-gray-600">Křížová 123, Jihlava</p>
+                    <p className="text-gray-600">Křížová, Jihlava</p>
                   </div>
                 </div>
 
