@@ -29,7 +29,21 @@ export default function Pricing() {
         "Skupinový kurz (až 3 lidé)",
         "Časový slot dle skupiny",
       ],
-    }
+    },
+    {
+      name: "Doučování ve firmách",
+      price: "od 600+",
+      period: "hodina",
+      description: "Firemní výuka přímo u vás na pracovišti nebo online. Obsah na míru podle oboru a týmu.",
+      icon: "🏢",
+      color: "from-amber-50 via-white to-orange-50",
+      borderColor: "border-amber-200",
+      features: [
+        "Cena od 600 Kč za 60 minut",
+        "Program pro týmy a oddělení",
+        "Business English, meetingy, prezentace",
+      ],
+    },
   ];
 
   const faqs = [
@@ -44,6 +58,10 @@ export default function Pricing() {
     {
       q: "Lze si domluvit čas lekce?",
       a: "Ano, čas lekce je možné domluvit individuálně podle vašich možností.",
+    },
+    {
+      q: "Nabízíte i firemní doučování?",
+      a: "Ano, firemní výuka začíná od 600 Kč za hodinu a připravíme ji podle úrovně i zaměření vašeho týmu.",
     },
     {
       q: "Co všechno cena zahrnuje?",
@@ -73,7 +91,7 @@ export default function Pricing() {
 
       <section className="py-16 md:py-24 px-4 md:px-8 bg-gradient-to-b from-white to-blue-50 relative">
         <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {pricingPlans.map((plan, idx) => (
               <div key={idx} className="relative rounded-[28px] overflow-hidden transition-all duration-500 border shadow-[0_24px_80px_rgba(0,71,171,0.12)]">
                 <div className={`absolute inset-0 bg-gradient-to-br ${plan.color}`}></div>
@@ -143,7 +161,7 @@ export default function Pricing() {
               Připraveni začít svou cestu k angličtině?
             </h2>
             <p className="text-xl text-gray-100 mb-12 max-w-2xl mx-auto">
-              Zarezervujte si konzultaci a domluvte si první lekci. Individuální lekce 400 Kč, skupinová lekce 500 Kč za hodinu.
+              Zarezervujte si konzultaci a domluvte si první lekci. Individuální lekce 400 Kč, skupinová 500 Kč a firemní doučování od 600 Kč za hodinu.
             </p>
             <div className="flex flex-col md:flex-row gap-4 justify-center">
               <Link
