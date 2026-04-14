@@ -8,6 +8,7 @@ import {
   deleteUser,
   fetchLessons,
   fetchNewsletterSettings,
+  fetchNewsletterCampaigns,
   fetchNewsletterSmtp,
   fetchUsers,
   saveNewsletterSettings,
@@ -59,6 +60,8 @@ export default function AdminDashboard() {
     body: "",
   });
   const [newsletterSending, setNewsletterSending] = useState(false);
+  const [newsletterCampaigns, setNewsletterCampaigns] = useState([]);
+  const [campaignsLoading, setCampaignsLoading] = useState(false);
 
   // State pro změnu hesla
   const [selectedUserForPassword, setSelectedUserForPassword] = useState(null);
@@ -91,6 +94,7 @@ export default function AdminDashboard() {
     loadData();
     loadNewsletterSettings();
     loadNewsletterSmtp();
+    loadNewsletterCampaigns();
   }, [navigate]);
 
   const loadNewsletterSettings = async () => {
@@ -134,6 +138,19 @@ export default function AdminDashboard() {
       setSmtpMessage("❌ " + (err.message || "Nepodařilo se načíst SMTP nastavení"));
     } finally {
       setSmtpLoading(false);
+    }
+  };
+
+  const loadNewsletterCampaigns = async () => {
+    try {
+      setCampaignsLoading(true);
+      const token = localStorage.getItem("authToken");
+      const campaigns = await fetchNewsletterCampaigns(token);
+      setNewsletterCampaigns(Array.isArray(campaigns) ? campaigns : []);
+    } catch (err) {
+      setNewsletterMessage("❌ " + (err.message || "Nepodařilo se načíst historii newsletterů"));
+    } finally {
+      setCampaignsLoading(false);
     }
   };
 
@@ -303,6 +320,7 @@ export default function AdminDashboard() {
         ctaUrl: "",
         body: "",
       });
+      await loadNewsletterCampaigns();
     } catch (err) {
       setNewsletterMessage("❌ " + (err.message || "Nepodařilo se připravit newsletter"));
     } finally {
@@ -592,6 +610,43 @@ export default function AdminDashboard() {
               {newsletterSending ? "Připravuji..." : "Rozeslat newsletter"}
             </button>
           </form>
+        </section>
+
+        <section className="bg-white rounded-xl border border-slate-200 p-4 md:p-5">
+          <h2 className="text-xl font-bold text-slate-900 mb-4">Historie newsletterů</h2>
+
+          {campaignsLoading ? (
+            <p className="text-sm text-slate-500">Načítám historii...</p>
+          ) : newsletterCampaigns.length === 0 ? (
+            <p className="text-sm text-slate-500">Zatím nebyl odeslán žádný newsletter.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-slate-500 border-b">
+                    <th className="py-2 pr-3">Předmět</th>
+                    <th className="py-2 pr-3">Odesláno</th>
+                    <th className="py-2 pr-3">Neúspěšné</th>
+                    <th className="py-2">Datum</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {newsletterCampaigns.map((campaign) => (
+                    <tr key={campaign.id} className="border-b last:border-0">
+                      <td className="py-2 pr-3 font-semibold text-slate-800">{campaign.subject}</td>
+                      <td className="py-2 pr-3">{campaign.sent_count ?? campaign.subscriber_count ?? 0}</td>
+                      <td className="py-2 pr-3">{campaign.failed_count ?? 0}</td>
+                      <td className="py-2 text-slate-600">
+                        {campaign.created_at
+                          ? new Date(campaign.created_at).toLocaleString("cs-CZ")
+                          : "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
 
         <section className="bg-white rounded-xl border border-slate-200 p-4 md:p-5">

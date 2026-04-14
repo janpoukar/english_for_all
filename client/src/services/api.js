@@ -628,3 +628,18 @@ export const sendNewsletterCampaign = async (campaign, token) => {
     throw error;
   }
 };
+
+export const fetchNewsletterCampaigns = async (token) => {
+  try {
+    const response = await fetch(`${API_BASE}/newsletter/campaigns`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return await parseJsonResponse(response, "Nepodařilo se načíst historii newsletterů");
+  } catch (error) {
+    console.error("Error fetching newsletter campaigns:", error);
+    throw error;
+  }
+};

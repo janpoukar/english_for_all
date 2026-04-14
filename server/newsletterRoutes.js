@@ -315,6 +315,16 @@ router.get('/subscribers', verifyAdmin, async (req, res) => {
   }
 });
 
+router.get('/campaigns', verifyAdmin, async (_req, res) => {
+  try {
+    const store = readStore();
+    res.json(store.campaigns);
+  } catch (err) {
+    console.error('Newsletter campaigns error:', err);
+    res.status(500).json({ error: 'Nepodařilo se načíst historii newsletterů' });
+  }
+});
+
 router.post('/send', verifyAdmin, async (req, res) => {
   try {
     const subject = String(req.body?.subject || '').trim();
@@ -366,8 +376,11 @@ router.post('/send', verifyAdmin, async (req, res) => {
     store.campaigns.unshift({
       id: Date.now(),
       subject,
+      preheader,
       body,
       subscriber_count: recipients.length,
+      sent_count: sendResults.length,
+      failed_count: sendErrors.length,
       created_at: new Date().toISOString(),
     });
     writeStore(store);
