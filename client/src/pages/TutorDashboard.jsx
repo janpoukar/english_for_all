@@ -1166,18 +1166,8 @@ export default function TutorDashboard() {
                       {materials.map((material) => (
                         <div key={material.id} className="border border-orange-200 rounded-lg p-2 bg-white">
                           <p className="text-sm font-semibold text-gray-900">{material.file_name || "Materiál"}</p>
-                          {material.id && (
-                            <a
-                              href={getMaterialDownloadUrl(material.id)}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-xs text-blue-700 mt-1 inline-block truncate hover:underline"
-                            >
-                              Otevřít soubor
-                            </a>
-                          )}
                         </div>
-                      ))}
+                      ))
                     </div>
                   )}
                 </div>
